@@ -16,5 +16,6 @@ sites/all/themes/*
 sites/all/modules/*
 sites/all/libraries/*
 sites/default/*
+sites/all/modules/lfz/tmp/sa/*
 !/sites/all/themes/bootstrap
 !/sites/all/modules/lfz
