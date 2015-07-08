@@ -244,7 +244,7 @@ function weekly_agenda_callback($class_nid = false, $date = false) {
     $week_data = thisWeekInfo($date);
 
     if (!$week_data['current_week']) {
-        $friendly_title_dates = date('n/j-y', $week_data['week']['start_ts']) . ' - ' . date('n/j-y', $week_data['week']['end_ts']);
+        $friendly_title_dates = date('n/j/y', $week_data['week']['start_ts']) . ' - ' . date('n/j/y', $week_data['week']['end_ts']);
         $title = 'Weekly Agenda - ' . $friendly_title_dates;
         drupal_set_title($title);
     }
