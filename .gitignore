@@ -1,0 +1,20 @@
+.DS_Store
+
+# drupal base files
+/*.php
+/*.txt
+/.htaccess
+/includes/*
+/misc/*
+/modules/*
+/profiles/*
+/scripts/*
+/themes/*
+/web.config
+
+sites/all/themes/*
+sites/all/modules/*
+sites/all/libraries/*
+sites/default/*
+!/sites/all/themes/bootstrap
+!/sites/all/modules/lfz
