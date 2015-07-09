@@ -61,7 +61,7 @@ $instructor_comments['#lfz'] = array('show_role' => 'instructor');
                             foreach ($skills as $key => $skill):
                                 $skill_node = $skill['node'];
                                 $title = $skill_node->title;
-                                $icon_uri = (isset($skill_node->field_icon)) ? $skill_node->field_icon['und'][0]['uri'] : false;
+                                $icon_uri = (isset($skill_node->field_icon['und'])) ? $skill_node->field_icon['und'][0]['uri'] : false;
                                 $url = 'skills/' . $skill_node->nid;
                                 if ($icon_uri) {
                                     $icon_url = file_create_url($icon_uri);
