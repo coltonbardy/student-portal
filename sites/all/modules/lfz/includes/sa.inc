@@ -227,8 +227,10 @@ function _parse_user_responses($data, &$errors){
                 'total_possible'=>0,
                 'total_correct'=>0,
                 'suggested_improvement'=>array(
-                    "topic"=>"",
-                    "skill"=>""
+//                    array(
+//                        "topic"=>"",
+//                        "skill"=>""
+//                    ),
                 )
             );
 
@@ -321,6 +323,10 @@ function _evaluate_user_response($answer, $response, $options=array()){
             break;
         case 'ms':
             $answer_arr = explode(",", $answer);
+            //remove white space from multiple selects
+            foreach($answer_arr as $key=>$answer){
+                $answer_arr[$key] = trim($answer);
+            }
             $response_arr = explode(",", $response);
 
             $r['total_possible'] = count($answer_arr);
@@ -332,20 +338,21 @@ function _evaluate_user_response($answer, $response, $options=array()){
                 );
             }
 
-            foreach($response_arr as $response){
-                
-                if($unknown_answer
-                    && $unknown_answer === $response){
+            foreach($response_arr as $response) {
+
+                if ($unknown_answer
+                    && $unknown_answer === $response
+                ) {
                     $r['incorrect_details'][] = array(
                         'type' => ANSWER_TYPE_UNKNOWN,
-                        'response'=>$response
+                        'response' => $response
                     );
-                }else if(array_search($response, $answer_arr) !== false){
+                } else if (array_search($response, $answer_arr) !== false) {
                     $r['total_correct'] += 1;
-                }else{
+                } else {
                     $r['incorrect_details'][] = array(
-                        'type'=>ANSWER_TYPE_BAD,
-                        'response'=>$response
+                        'type' => ANSWER_TYPE_BAD,
+                        'response' => $response
                     );
                 }
             }

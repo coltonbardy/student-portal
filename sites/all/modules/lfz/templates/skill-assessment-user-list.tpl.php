@@ -11,7 +11,7 @@
         $user_name = $user->field_first_name['und'][0]['value'] . ' ' . $user->field_last_name['und'][0]['value'];
         $element_id = "collapse" . $user->uid;
         $details_class = "panel-collapse collapse";
-        if ($i === 0) {
+        if ($i === 0 && count($data) == 1) {
             $details_class .= " in";
         }
         $percent = $user_data['data']['total_correct'] / $user_data['data']['total_possible'];
@@ -19,7 +19,7 @@
         $class_to_grade = array(
             'label-success' => .9,
             'label-default' => .7,
-            'label-warning' => .6,
+            'label-warning' => .5,
             'label-danger' => 0
         );
 
@@ -54,13 +54,13 @@
                             ?>
                             <div class="<?php print $panel_class; ?>">
                                 <div class="panel-heading">
-                                    <?php print $question['question']; ?>
+                                    <?php print htmlspecialchars($question['question']); ?>
                                 </div>
                                 <div class="panel-body">
-                                    <p>User Reponse : <?php print $question['response']; ?></p>
+                                    <p>User Reponse : <?php print htmlspecialchars($question['response']); ?></p>
                                 </div>
                                 <?php if (!$question['correct']): ?>
-                                    <div class="panel-footer">Correct Answer : <?php print $question['answer']; ?></div>
+                                    <div class="panel-footer">Correct Answer : <?php print htmlspecialchars($question['answer']); ?></div>
                                 <?php endif; ?>
 
                             </div>

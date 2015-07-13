@@ -3,7 +3,9 @@
 $node = node_load($nid);
 
 if ($links) {
-    $title = l($title, 'node/' . $nid);
+    if(user_access('view agenda item details')){
+        $title = l($title, 'node/' . $nid);
+    }
     if (user_has_role(array_search('content manager', user_roles()))) {
         $edit = l('Edit', 'node/' . $nid . '/edit');
     }

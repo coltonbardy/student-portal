@@ -199,6 +199,10 @@ function lfz_permission() {
 			'title' => t('View Agendas'),
 			'description' => t('Can view agenda and agenda items'),
 		),
+        'view agenda item details' => array(
+            'title' => t('View agenda Item Details'),
+            'description' => t('Can view agenda and agenda items Detail pages'),
+        ),
 	);
 }
 
