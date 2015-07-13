@@ -338,7 +338,12 @@ function _evaluate_user_response($answer, $response, $options=array()){
                 );
             }
 
+
+
             foreach($response_arr as $response) {
+
+                //remove white space from responses
+                $response = trim($response);
 
                 if ($unknown_answer
                     && $unknown_answer === $response
@@ -356,7 +361,6 @@ function _evaluate_user_response($answer, $response, $options=array()){
                     );
                 }
             }
-
 
             break;
     }
