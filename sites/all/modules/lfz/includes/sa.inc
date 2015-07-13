@@ -255,10 +255,12 @@ function _parse_user_responses($data, &$errors){
 
                 if(!$temp_response['correct']){
                     $temp_user_arr['data']['suggested_improvement'] = array();
-                    $temp_improvement_arr = array();
-                    $temp_improvement_arr['topic'] = $q['associated_topic'];
-                    $temp_improvement_arr['skill'] = $q['associated_skill'];
-                    $temp_user_arr['data']['suggested_improvement'][] = $temp_improvement_arr;
+                    if(isset($q['associated_topic']) && $q['associated_topic'] != ""){
+                        $temp_improvement_arr = array();
+                        $temp_improvement_arr['topic'] = $q['associated_topic'];
+                        $temp_improvement_arr['skill'] = $q['associated_skill'];
+                        $temp_user_arr['data']['suggested_improvement'][] = $temp_improvement_arr;
+                    }
                 }
             }
 

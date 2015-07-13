@@ -73,8 +73,8 @@
                         <h4>Suggested Items To Review</h4>
                         <div class="well well-sm">
                             <ul class="list-group">
-                                <?php foreach ($user_data['data']['suggested_improvement'] as $improvements): ?>
-                                    <li class="list-group-item"><?php print $improvements['topic']; ?></li>
+                                <?php foreach ($user_data['data']['suggested_improvement'] as $improvement): ?>
+                                    <li class="list-group-item"><?php print $improvement['topic']; ?></li>
                                 <?php endforeach; ?>
                             </ul>
                         </div>

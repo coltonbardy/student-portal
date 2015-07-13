@@ -76,6 +76,7 @@
 			mouseIsDown = true;
 		});
 
+
 		$('body').on('mouseup', function(evt){
 			mouseIsDown = false;
 		});
