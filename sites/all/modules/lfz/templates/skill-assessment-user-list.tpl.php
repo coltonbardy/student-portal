@@ -34,6 +34,7 @@
                 break;
             }
         }
+
         ?>
         <div class="panel panel-default">
             <div class="panel-heading" role="tab" id="headingOne">
@@ -78,8 +79,8 @@
                         <h4>Suggested Items To Review</h4>
                         <div class="well well-sm">
                             <ul class="list-group">
-                                <?php foreach ($user_data['data']['suggested_improvement'] as $improvement): ?>
-                                    <li class="list-group-item"><?php print $improvement['topic']; ?></li>
+                                <?php foreach ($user_data['data']['suggested_improvement']['topics'] as $topic): ?>
+                                    <li class="list-group-item"><?php print $topic; ?></li>
                                 <?php endforeach; ?>
                             </ul>
                         </div>
