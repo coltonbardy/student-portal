@@ -844,3 +844,32 @@ function _load_node_basic($nid){
 
     return $r;
 }
+
+function _get_users_classes($uid=false){
+
+
+    if(!$uid){
+        global $user;
+    }else{
+        $user = user_load($uid);
+    }
+
+    $user_roles = $user->roles;
+    $rid_array = array_keys($user_roles);
+    $sql_roles = "'" . join("','", $rid_array) . "'";
+
+
+    $sql = "SELECT node.title AS title, node.nid AS nid
+					FROM
+					{node} node
+					LEFT JOIN {field_data_field_access_roles} field_data_field_access_roles ON node.nid = field_data_field_access_roles.entity_id AND (field_data_field_access_roles.entity_type = 'node' AND field_data_field_access_roles.deleted = '0')
+					WHERE (( (node.status = '1') AND (node.type IN  ('class')) AND (field_data_field_access_roles.field_access_roles_value IN (" . $sql_roles . ")) ))
+					GROUP BY nid
+					ORDER BY title DESC
+					LIMIT 10 OFFSET 0";
+
+    $result = db_query($sql);
+
+
+    return $result->fetchAll();
+}

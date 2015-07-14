@@ -7,6 +7,11 @@
 
     $i = 0;
     foreach ($data as $user_data):
+        
+        echo '<pre>';
+        print_r($user_data);
+        echo '</pre>';
+        
         $user = user_load($user_data['uid']);
         $user_name = $user->field_first_name['und'][0]['value'] . ' ' . $user->field_last_name['und'][0]['value'];
         $element_id = "collapse" . $user->uid;

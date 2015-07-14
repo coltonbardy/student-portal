@@ -229,6 +229,14 @@ function weekly_agenda_callback($class_nid = false, $date = false) {
             $redirect_url .= '/' . $date;
         }
 
+        //get user classes and then redirect if the user only has access to one class
+        $users_classes = _get_users_classes();
+        if(count($users_classes) === 1){
+            $redirect_url = str_replace("{class_nid}", $users_classes[0]->nid, $redirect_url);
+            drupal_goto($redirect_url);
+        }
+
+
         drupal_add_js(array('lfz' => array('redirect_url' => $redirect_url)),
             'setting');
 
@@ -327,9 +335,18 @@ function todays_agenda_callback($class_nid = false, $date = false) {
 
     if (!$class_nid) {
 
+
+
         $redirect_url = 'class/{class_nid}/today';
         if ($date) {
             $redirect_url .= '/' . $date;
+        }
+
+        //get user classes and then redirect if the user only has access to one class
+        $users_classes = _get_users_classes();
+        if(count($users_classes) === 1){
+            $redirect_url = str_replace("{class_nid}", $users_classes[0]->nid, $redirect_url);
+            drupal_goto($redirect_url);
         }
 
         drupal_add_js(array('lfz' => array('redirect_url' => $redirect_url)),

@@ -218,6 +218,10 @@ function _parse_user_responses($data, &$errors){
 
         $user = _load_user_by_email($response_unique_id);
 
+        echo '<pre>';
+        print_r($user);
+        echo '</pre>';
+
         if($user){
             $temp_user_arr = array();
 
@@ -225,6 +229,8 @@ function _parse_user_responses($data, &$errors){
             $temp_user_arr['questions'] = array();
             $temp_user_arr['data'] = array(
                 'total_possible'=>0,
+                'total_answered'=>0,
+                'unknown_answered'=>0,
                 'total_correct'=>0,
                 'suggested_improvement'=>array(
 //                    array(
@@ -253,7 +259,9 @@ function _parse_user_responses($data, &$errors){
 
 
                 $temp_user_arr['data']['total_possible'] += $temp_response['details']['total_possible'];
+                $temp_user_arr['data']['total_answered'] += $temp_response['details']['total_answered'];
                 $temp_user_arr['data']['total_correct'] += $temp_response['details']['total_correct'];
+                $temp_user_arr['data']['unknown_answered'] += $temp_response['details']['unknown_answered'];
 
                 if(!$temp_response['correct']){
                     $temp_user_arr['data']['suggested_improvement'] = array();
@@ -292,6 +300,8 @@ function _evaluate_user_response($answer, $response, $options=array()){
     $r = array(
         'total_possible'=>1,
         'total_correct'=>0,
+        'total_answered'=>0,
+        'unknown_answered'=>0,
         'incorrect_details'=>array(
 //            array(
 //                'type'=>ANSWER_TYPE_BAD,
@@ -304,6 +314,10 @@ function _evaluate_user_response($answer, $response, $options=array()){
     $answer = trim(strtolower($answer));
     $response = trim(strtolower($response));
 
+    echo '<pre>';
+    var_dump($response);
+    echo '</pre>';
+
     switch($options['type']){
         case 'mc':
             if($unknown_answer
@@ -312,13 +326,16 @@ function _evaluate_user_response($answer, $response, $options=array()){
                     'type'=>ANSWER_TYPE_UNKNOWN,
                     'response'=>$response
                 );
+                $r['unknown_answered'] = 1;
             }else if($answer === $response){
                 $r['total_correct'] = 1;
+                $r['total_answered'] = 1;
             }else{
                 $r['incorrect_details'][] = array(
                     'type'=>ANSWER_TYPE_BAD,
                     'response'=>$response
                 );
+                $r['total_answered'] = 1;
             }
             break;
         case 'ms':
@@ -352,13 +369,16 @@ function _evaluate_user_response($answer, $response, $options=array()){
                         'type' => ANSWER_TYPE_UNKNOWN,
                         'response' => $response
                     );
+                    $r['unknown_answered'] = 1;
                 } else if (array_search($response, $answer_arr) !== false) {
                     $r['total_correct'] += 1;
+                    $r['total_answered'] += 1;
                 } else {
                     $r['incorrect_details'][] = array(
                         'type' => ANSWER_TYPE_BAD,
                         'response' => $response
                     );
+                    $r['total_answered'] += 1;
                 }
             }
 
