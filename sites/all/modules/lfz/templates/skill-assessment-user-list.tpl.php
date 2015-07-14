@@ -8,10 +8,6 @@
     $i = 0;
     foreach ($data as $user_data):
         
-        echo '<pre>';
-        print_r($user_data);
-        echo '</pre>';
-        
         $user = user_load($user_data['uid']);
         $user_name = $user->field_first_name['und'][0]['value'] . ' ' . $user->field_last_name['und'][0]['value'];
         $element_id = "collapse" . $user->uid;
@@ -23,12 +19,14 @@
 
         $class_to_grade = array(
             'label-success' => .9,
-            'label-default' => .7,
+            'label-info' => .7,
             'label-warning' => .5,
             'label-danger' => 0
         );
 
         $label_class = "label";
+        //unknown answered vs total number of questions to get unknown percent
+        $not_answered_percent = (($user_data['data']['unknown_answered'] / count($user_data['questions']))*100);
 
         foreach ($class_to_grade as $key => $value) {
             if ($percent >= $value) {
@@ -44,7 +42,9 @@
                        aria-expanded="true" aria-controls="collapseOne">
                         <?php print $user_name; ?>
                         <span
-                            class="<?php print $label_class; ?>"><?php print $user_data['data']['total_correct'] . " of " . $user_data['data']['total_possible'] ?></span>
+                            class="<?php print $label_class; ?>"><?php print round(($percent*100)).'% answered correctly' ?></span>
+                        <span
+                            class="label label-default"><?php print round($not_answered_percent).'% not answered' ?></span>
                     </a>
                 </h4>
             </div>

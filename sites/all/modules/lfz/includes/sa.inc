@@ -218,10 +218,6 @@ function _parse_user_responses($data, &$errors){
 
         $user = _load_user_by_email($response_unique_id);
 
-        echo '<pre>';
-        print_r($user);
-        echo '</pre>';
-
         if($user){
             $temp_user_arr = array();
 
@@ -257,7 +253,6 @@ function _parse_user_responses($data, &$errors){
                 $temp_user_arr['questions'][] = $temp_response;
 
 
-
                 $temp_user_arr['data']['total_possible'] += $temp_response['details']['total_possible'];
                 $temp_user_arr['data']['total_answered'] += $temp_response['details']['total_answered'];
                 $temp_user_arr['data']['total_correct'] += $temp_response['details']['total_correct'];
@@ -278,6 +273,8 @@ function _parse_user_responses($data, &$errors){
         }else{
             $errors[] = "User doesn't exist with : ".$response_unique_id;
         }
+
+        
 
     }
 
@@ -313,10 +310,6 @@ function _evaluate_user_response($answer, $response, $options=array()){
     $unknown_answer = (isset($options['unknown_answer_val']))?trim(strtolower($options['unknown_answer_val'])):false;
     $answer = trim(strtolower($answer));
     $response = trim(strtolower($response));
-
-    echo '<pre>';
-    var_dump($response);
-    echo '</pre>';
 
     switch($options['type']){
         case 'mc':
