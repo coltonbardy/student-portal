@@ -195,9 +195,10 @@ function ajax_agenda_today_add_callback($date = false, $nid = false, $class_nid 
 
     $agenda_node = get_daily_agenda($date, $class_nid);
 
-    echo '<pre>';
-    var_dump($agenda_node);
-    echo '</pre>';
+    if(!$agenda_node){
+        //create agenda node
+        $agenda_node = _create_agenda_by_date($date, $class_nid);
+    }
 
     $res = array('success' => true, 'data' => null);
 
@@ -360,8 +361,6 @@ function weekly_agenda_callback($class_nid = false, $date = false) {
 function todays_agenda_callback($class_nid = false, $date = false) {
 
     if (!$class_nid) {
-
-
 
         $redirect_url = 'class/{class_nid}/today';
         if ($date) {
