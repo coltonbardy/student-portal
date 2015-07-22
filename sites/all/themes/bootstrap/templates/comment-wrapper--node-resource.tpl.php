@@ -6,28 +6,29 @@ $show_comment_form = isset($content['#lfz']['show_comment_form']) ? $content['#l
 <?php
 if ($content['comment_form'] && $show_comment_form): ?>
     <div class="col-sm-12">
-      <button class="btn btn-primary pull-right" data-toggle="collapse" data-target="#resource-comment-con"><?php print t('Add Comment');?></button>
-      <div class="clear-fix"></div>
-      <div class="collapse well col-xs-12" id="resource-comment-con">
-        <?php print render($content['comment_form']);?>
-      </div>
+        <button class="btn btn-primary pull-right" data-toggle="collapse"
+                data-target="#resource-comment-con"><?php print t('Add Comment'); ?></button>
+        <div class="clear-fix"></div>
+        <div class="collapse well col-xs-12" id="resource-comment-con">
+            <?php print render($content['comment_form']); ?>
+        </div>
     </div>
-  <?php
-endif;?>
-<div id="comments" class="col-xs-12 <?php print $classes;?>"<?php print $attributes;?>>
-<!-- <?php
-if ($content['comments'] && $node->type != 'forum'): ?>
+<?php
+endif; ?>
+<div id="comments" class="col-xs-12 <?php print $classes; ?>"<?php print $attributes; ?>>
+    <!-- <?php
+    if ($content['comments'] && $node->type != 'forum'): ?>
    <?php
-print render($title_prefix);?>
+        print render($title_prefix); ?>
     <h2 class="title"><?php
-print t('Comments');?></h2>
+        print t('Comments'); ?></h2>
     <?php
-print render($title_suffix);?>
+        print render($title_suffix); ?>
   <?php
-endif;?> -->
+    endif; ?> -->
 
-  <?php
-foreach ($content['comments'] as $comment):
+    <?php
+    foreach ($content['comments'] as $comment):
     if (!is_array($comment) || !array_key_exists('comment_body', $comment)) {
         continue;
     }
@@ -54,51 +55,60 @@ foreach ($content['comments'] as $comment):
     }
     $img = (isset($uri)) ? file_create_url($uri) : base_path() . drupal_get_path('module', 'lfz') . '/assets/avatar_2x.png';
     ?>
-								<div class="row">
-								    <?php
-    if ($show_user_thumb):
-    ?>
-								    <div class="col-xs-2 <?php
-    print($comment_node->pid != 0) ? 'col-sm-offset-1' : '';?>">
-								      <div class="thumbnail">
-								        <img class="img-responsive user-photo" src="<?php
-    print $img;?>">
-								      </div><!-- /thumbnail -->
-								    </div><!-- /col-sm-1 -->
-								    <div class="col-xs-9">
-								      <div class="panel panel-default">
-								        <div class="panel-heading">
-								          <strong><?php
-    print render($first_name_output) . ' ' . render($last_name_output);?></strong> <span class="text-muted">commented <?php
-    print _time_elapsed_string($comment_node->changed);?></span>
-								        </div>
-								        <div class="panel-body">
-								          <?php
-    print $comment_text;?>
-								        </div><!-- /panel-body -->
-								      </div><!-- /panel panel-default -->
-								    </div><!-- /col-sm-5 -->
-								  </div>
-								    <?php
+    <div class="row">
+        <?php
+        if ($show_user_thumb):
+        ?>
+        <div class="col-xs-2 <?php
+        print($comment_node->pid != 0) ? 'col-sm-offset-1' : '';?>">
+            <div class="thumbnail">
+                <img class="img-responsive user-photo" src="<?php
+                print $img;?>">
+            </div>
+            <!-- /thumbnail -->
+        </div>
+        <!-- /col-sm-1 -->
+        <div class="col-xs-9">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong><?php
+                        print render($first_name_output) . ' ' . render($last_name_output);?></strong> <span
+                        class="text-muted">commented <?php
+                        print _time_elapsed_string($comment_node->changed);?></span>
+                </div>
+                <div class="panel-body">
+                    <?php
+                    print $comment_text;?>
+                </div>
+                <!-- /panel-body -->
+            </div>
+            <!-- /panel panel-default -->
+        </div>
+        <!-- /col-sm-5 -->
+    </div>
+    <?php
     else:
     ?>
-								      <div class="col-xs-12">
-								      <div class="panel panel-default">
-								        <div class="panel-heading">
-								          <strong><?php print render($first_name_output) . ' ' . render($last_name_output);?></strong>
-		                      <span class="text-muted">commented <?php print _time_elapsed_string($comment_node->changed);?></span>
-								        </div>
-								        <div class="panel-body">
-								          <?php print $comment_text;?>
-								        </div><!-- /panel-body -->
-								      </div><!-- /panel panel-default -->
-								    </div><!-- /col-sm-5 -->
-								  </div>
-								      <?php
-    endif;
-    ?>
+    <div class="col-xs-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <strong><?php print render($first_name_output) . ' ' . render($last_name_output);?></strong>
+                <span class="text-muted">commented <?php print _time_elapsed_string($comment_node->changed);?></span>
+            </div>
+            <div class="panel-body">
+                <?php print $comment_text;?>
+            </div>
+            <!-- /panel-body -->
+        </div>
+        <!-- /panel panel-default -->
+    </div>
+    <!-- /col-sm-5 -->
+</div>
+<?php
+endif;
+?>
 
-								<?php
+<?php
 endforeach;
 ?>
 
