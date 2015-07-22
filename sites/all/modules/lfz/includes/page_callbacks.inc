@@ -476,6 +476,9 @@ function skill_assessment_list_callback(){
 
     drupal_set_title("Skill Assessments Taken");
 
+    $sql = "";
+    $values = array();
+
     if (user_has_role(array_search('instructor', user_roles()))) {
         $sql = 'SELECT nid, title, changed FROM {node} WHERE type=:type ORDER BY changed DESC';
         $values = array(":type"=>"skill_assessment_results");
@@ -495,12 +498,23 @@ function skill_assessment_list_callback(){
         $values = array(":roles"=>array_keys($user->roles));
     }
 
-    $query = db_query($sql, $values);
-
     $data = array();
-    while($result = $query->fetchAssoc()){
-        $data[] = $result;
+
+    if(strlen($sql) > 0){
+        $query = db_query($sql, $values);
+
+        while($result = $query->fetchAssoc()){
+            $data[] = $result;
+        }
     }
 
-    return theme("skill_assessment_list", array("data"=>$data));
+
+    $r = theme("skill_assessment_list", array("data"=>$data));
+
+    if(count($data) == 0){
+        $r = "No Results for this page";
+    }
+
+
+    return $r;
 }

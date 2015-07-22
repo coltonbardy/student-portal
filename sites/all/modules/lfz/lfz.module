@@ -148,7 +148,8 @@ function lfz_menu() {
     $items['skillassessment/list'] = array(
         'title' => 'Assessment Results',
         'page callback' => 'skill_assessment_list_callback',
-        'access callback' => TRUE,
+        'access callback' => 'check_user_roles',
+        'access arguments'=>array('instructor', 'student'),
 //        'type' => MENU_CALLBACK,
     );
 
@@ -884,4 +885,22 @@ function _get_users_classes($uid=false){
 
 
     return $result->fetchAll();
+}
+
+function check_user_roles($instructor, $student){
+    global $user;
+
+    $arguments = func_get_args();
+
+    $r = false;
+
+    foreach($arguments as $roles){
+
+        if(user_has_role(array_search($roles, user_roles()))){
+            $r = true;
+            break;
+        }
+    }
+
+    return $r;
 }
