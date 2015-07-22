@@ -11,11 +11,11 @@ jQuery(document).ready(function () {
     }
 
     jQuery('body').on('click', '.agenda-add-today', function () {
-        console.log("click called");
 
         //add spinner
         var spinner_html = '<span class="spinner animate"><i class="glyphicon glyphicon-refresh"></i></span>';
         jQuery(this).addClass("has-spinner");
+
         if(jQuery(this).find(".spinner").length ==0){
             jQuery(this).prepend(spinner_html);
         }
@@ -38,10 +38,10 @@ jQuery(document).ready(function () {
                     data:obj,
                     dataType:'json',
                     success:function(response){
-                        console.log("response : ", response);
                         if(response.success){
                             elm.toggleClass('active');
                         }else{
+                            console.error("Error adding item to todays agenda");
                         }
                     },
                     error:function(response){

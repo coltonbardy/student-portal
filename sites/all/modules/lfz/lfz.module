@@ -890,11 +890,12 @@ function _get_users_classes($uid=false){
 
 function _get_current_classes(){
 
-    $sql = "SELECT node.title AS node_title, node.nid AS nid
+    $sql = "SELECT node.title AS node_title, node.nid AS nid, node.created AS node_created
             FROM
             {node} node
-            LEFT JOIN {field_data_field_start_date} field_data_field_start_date ON node.nid = field_data_field_start_date.entity_id AND (field_data_field_start_date.entity_type = 'node' AND field_data_field_start_date.deleted = '0')
-            WHERE (( (node.status = '1') AND (node.type IN  ('class')) AND (DATE_FORMAT(FROM_UNIXTIME(field_data_field_start_date.field_start_date_value), :now) <= '2015-07-22') AND (DATE_FORMAT(FROM_UNIXTIME(field_data_field_start_date.field_start_date_value2), '%Y-%m-%d') >= :now) ))";
+            LEFT JOIN {field_data_field_start_end_date} field_data_field_start_end_date ON node.nid = field_data_field_start_end_date.entity_id AND (field_data_field_start_end_date.entity_type = 'node' AND field_data_field_start_end_date.deleted = '0')
+            WHERE (( (node.status = '1') AND (node.type IN  ('class')) AND (DATE_FORMAT(FROM_UNIXTIME(field_data_field_start_end_date.field_start_end_date_value), '%Y-%m-%d') <= :now) AND (DATE_FORMAT(FROM_UNIXTIME(field_data_field_start_end_date.field_start_end_date_value2), '%Y-%m-%d') >= :now) ))
+            ORDER BY node_created DESC";
 
     $today_date_format = date("Y-m-d");
     $values = array(":now"=>$today_date_format);
