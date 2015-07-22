@@ -73,6 +73,8 @@ function lfz_menu() {
 		'access callback' => TRUE,
 		'type' => MENU_CALLBACK,
 	);
+
+
 	$items['ajax/today/add-item/%'] = array(
 		'title' => 'Add Item to agenda',
 		'page callback' => 'ajax_agenda_today_add_callback',
@@ -328,7 +330,6 @@ function lfz_theme($existing, $type, $theme, $path) {
 
 	return $theme;
 }
-
 
 function _remove_agenda_item_from_agenda($agenda_nid, $item_nid, $index = false) {
 	$agenda_node = $agenda_nid;
@@ -883,6 +884,22 @@ function _get_users_classes($uid=false){
 
     $result = db_query($sql);
 
+
+    return $result->fetchAll();
+}
+
+function _get_current_classes(){
+
+    $sql = "SELECT node.title AS node_title, node.nid AS nid
+            FROM
+            {node} node
+            LEFT JOIN {field_data_field_start_date} field_data_field_start_date ON node.nid = field_data_field_start_date.entity_id AND (field_data_field_start_date.entity_type = 'node' AND field_data_field_start_date.deleted = '0')
+            WHERE (( (node.status = '1') AND (node.type IN  ('class')) AND (DATE_FORMAT(FROM_UNIXTIME(field_data_field_start_date.field_start_date_value), :now) <= '2015-07-22') AND (DATE_FORMAT(FROM_UNIXTIME(field_data_field_start_date.field_start_date_value2), '%Y-%m-%d') >= :now) ))";
+
+    $today_date_format = date("Y-m-d");
+    $values = array(":now"=>$today_date_format);
+
+    $result = db_query($sql, $values);
 
     return $result->fetchAll();
 }
