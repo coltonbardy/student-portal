@@ -171,7 +171,34 @@ function ajax_add_new_agenda_item_callback($date = false) {
 function ajax_agenda_today_add_callback($date = false, $nid = false, $class_nid = false) {
     $agenda_item_nid = ($nid) ? $nid : $_REQUEST['nid'];
     $class_nid = ($class_nid) ? $class_nid : $_REQUEST['class_nid'];
+
+    if(!isset($class_nid)){
+        //choose most relevant class
+        $classes = _get_current_classes();
+
+        if(count($classes) == 1){
+            $class_nid = $classes[0]->nid;
+        }else{
+            //this should error out
+            $res['success'] = false;
+
+            if(count($classes) == 0){
+                $res['content'] = "Don't have the ability to save agenda item without a class reference";
+            }else{
+                $res['content'] = $classes;
+            }
+
+            echo json_encode($res);
+            exit;
+        }
+    }
+
     $agenda_node = get_daily_agenda($date, $class_nid);
+
+    if(!$agenda_node){
+        //create agenda node
+        $agenda_node = _create_agenda_by_date($date, $class_nid);
+    }
 
     $res = array('success' => true, 'data' => null);
 
@@ -334,8 +361,6 @@ function weekly_agenda_callback($class_nid = false, $date = false) {
 function todays_agenda_callback($class_nid = false, $date = false) {
 
     if (!$class_nid) {
-
-
 
         $redirect_url = 'class/{class_nid}/today';
         if ($date) {
