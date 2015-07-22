@@ -1,4 +1,4 @@
-<div class="skill-assessment-list">
+<div class="skill-assessment-list list-group">
 <?php
 /**
  * Created by PhpStorm.

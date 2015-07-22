@@ -474,17 +474,17 @@ function skill_assessment_list_callback(){
 
     global $user;
 
-    drupal_set_title("Skill Assessment Results");
+    drupal_set_title("Skill Assessments Taken");
 
     $sql = "";
     $values = array();
 
     if (user_has_role(array_search('instructor', user_roles()))) {
-        $sql = 'SELECT nid, title FROM {node} WHERE type=:type';
+        $sql = 'SELECT nid, title, changed FROM {node} WHERE type=:type ORDER BY changed DESC';
         $values = array(":type"=>"skill_assessment_results");
     }else if(user_has_role(array_search('student', user_roles()))){
         
-        $sql = "SELECT node.title AS title, node.nid AS nid, node.created AS node_created, 'node' AS field_data_field_class_reference_node_entity_type
+        $sql = "SELECT node.title AS title, node.nid AS nid, node.changed AS changed, 'node' AS field_data_field_class_reference_node_entity_type
                 FROM
                 {node} node
                 LEFT JOIN {field_data_field_class_reference} field_data_field_class_reference ON node.nid = field_data_field_class_reference.entity_id AND (field_data_field_class_reference.entity_type = 'node' AND field_data_field_class_reference.deleted = '0')
@@ -493,7 +493,7 @@ function skill_assessment_list_callback(){
                 WHERE (( (node.status = '1')
                     AND (node.type IN  ('skill_assessment_results'))
                   AND (node_field_data_field_class_reference__field_data_field_access_roles.field_access_roles_value IN (:roles)) ))
-                ORDER BY node_created DESC";
+                ORDER BY node.changed ASC";
 
         $values = array(":roles"=>array_keys($user->roles));
     }
