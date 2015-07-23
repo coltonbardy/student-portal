@@ -13,7 +13,7 @@ if ($links) {
 
 ?>
 
-<div class="col-sm-9">
+<div class="col-sm-8">
     <h5>
         <?php echo $title; ?>
         <?php if ($type): ?>

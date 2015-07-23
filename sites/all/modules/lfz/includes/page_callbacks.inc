@@ -338,13 +338,14 @@ function weekly_agenda_callback($class_nid = false, $date = false) {
 
             $i = 0;
             foreach ($items as $item) {
-                $week_results[$day_of_week_key]['items'][] = array(
-                    'nid' => $item->nid,
-                    'title' => $item->title,
-                    'type' => $item->type,
-                    'attr' => array('data-agenda-nid' => $agenda->nid,
-                        'data-index' => $i),
+
+                $obj = _prepare_agenda_item($item);
+                $obj['attr'] = array(
+                    'data-index' => count($agenda->field_agenda_item['und']) - 1,
+                    'data-agenda-nid' => $agenda->nid,
                 );
+                $week_results[$day_of_week_key]['items'][] = $obj;
+
                 $i++;
             }
         }

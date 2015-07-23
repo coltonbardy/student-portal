@@ -26,33 +26,33 @@ if (!$ob) {
 
 ob_start();
 ?>
-<?php echo theme('agenda_item_heading', array('title' => $title, 'nid' => $nid, 'type' => $type));
-
-if (user_access('remove agenda items') && $removeBtn):
-    ?>
-    <input type="button" class="btn btn-sm btn-danger pull-right remove-agenda-item" value="Remove">
 <?php
-endif;
+print theme('agenda_item_heading', array('title' => $title, 'nid' => $nid, 'type' => $type));
+?>
+    <div class="btn-group col-xs-4 agenda-list-actions" role="group" aria-label="">
+<?php if (user_access('remove agenda items') && $removeBtn): ?>
+    <input type="button" class="btn btn-sm btn-danger remove-agenda-item" value="Remove">
+<?php endif;
 
 if (user_has_role(array_search('instructor', user_roles()))
     && $type == 'sa'
-    && !$results) {
+    && !$results
+) {
     ?>
-    <input type="button" class="btn btn-sm btn-info pull-right add-sa-results" value="Add Results">
+    <input type="button" class="btn btn-sm btn-info add-sa-results" value="Add Results">
 <?php
-}
-
-if ($results && count($results) > 0) {
+}else if ($results && count($results) > 0) {
     //also needs to be changed inside of agenda.js
     $result_url = "skillassessment/details/" . $results['nid'];
-    print l('View Resutls', $result_url, array('attributes' => array('class' => 'btn btn-sm btn-default pull-right', 'target' => '_blank')));
+    print l('View Resutls', $result_url, array('attributes' => array('class' => 'btn btn-sm btn-default', 'target' => '_blank')));
 }
 
 ?>
+    </div>
     <span class="clearfix"></span>
 <?php
 $template_content = ob_get_contents();
 ob_end_clean();
 
-echo theme('bootstrap_list_item', array('content' => $template_content, 'attr' => $attr));
+print theme('bootstrap_list_item', array('content' => $template_content, 'attr' => $attr));
 ?>

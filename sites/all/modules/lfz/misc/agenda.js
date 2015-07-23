@@ -86,9 +86,8 @@
 
         //add skill assessment results button handler
         $('body').on('click', '.add-sa-results', function(){
-            var listItem = $(this).parent('.agenda-list-item');
+            var listItem = $(this).parents('.agenda-list-item');
 
-            console.log("listItem : ", listItem);
             var saResultsInputCon = $('<div>').addClass("results-form-con");
             var textArea = $('<textarea rows="7" placeholder="Insert CSV results">').addClass("col-xs-12");
             var saveButton = $('<input type="button">').addClass('btn btn-success').val("Save");
@@ -116,7 +115,7 @@
                     var alertElm = $('<div class="alert" role="alert">');
                     //also would need to be changed inside agenda-item-list template
                     var results_url = base_path+"skillassessment/details/"+agenda_nid;
-                    var resultsButton = $('<a>').addClass('btn btn-sm btn-default pull-right').html("View Results").attr({'href':results_url, 'target':'blank'})
+                    var resultsButton = $('<a>').addClass('btn btn-sm btn-defaultgi').html("View Results").attr({'href':results_url, 'target':'blank'})
                     var dataObj = {
                         data:insertedValue,
                         resource_nid:nid,
@@ -131,7 +130,7 @@
                             console.log(response);
                             if(response.success){
                                 alertElm.addClass('alert-success').html("Results Saved Successfully");
-                                clickedElm.parents('.agenda-list-item').append(resultsButton)
+                                clickedElm.parents('.agenda-list-item').find('.agenda-list-actions').append(resultsButton)
                             }else{
                                 alertElm.addClass('alert-danger').html("Couldn't save results for Skill Assessment");
                             }
