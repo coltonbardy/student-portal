@@ -84,6 +84,80 @@
 		//remove agenda item click handler
 		$('body').on('click', '.remove-agenda-item', removeAgendaItem);
 
+        //add skill assessment results button handler
+        $('body').on('click', '.add-sa-results', function(){
+            var listItem = $(this).parent('.agenda-list-item');
+
+            console.log("listItem : ", listItem);
+            var saResultsInputCon = $('<div>').addClass("results-form-con");
+            var textArea = $('<textarea rows="7" placeholder="Insert CSV results">').addClass("col-xs-12");
+            var saveButton = $('<input type="button">').addClass('btn btn-success').val("Save");
+            $(saveButton).on('click', saveSkillAssessmentResultsButtonClick);
+            var cancelButton = $('<input type="button">').addClass('btn btn-default').val("Cancel");
+            $(cancelButton).on('click', cancelSkillAssessmentResultsButtonClick);
+            saResultsInputCon.append(textArea, saveButton, cancelButton);
+            listItem.append(saResultsInputCon);
+
+            $(this).hide();
+        });
+
+        function saveSkillAssessmentResultsButtonClick(){
+
+            var listItem = $(this).parents('.agenda-list-item');
+            var agenda_nid = listItem.parent('.list-group').data('agenda-nid');
+            var nid = listItem.data('nid');
+            var insertedValue = $(this).parent().find('textarea').val();
+
+            if(insertedValue != "" && nid){
+
+                var url = base_path+'ajax/skillassessment/save-results';
+
+                (function(clickedElm){
+                    var alertElm = $('<div class="alert" role="alert">');
+                    //also would need to be changed inside agenda-item-list template
+                    var results_url = base_path+"skillassessment/details/"+agenda_nid;
+                    var resultsButton = $('<a>').addClass('btn btn-sm btn-default pull-right').html("View Results").attr({'href':results_url, 'target':'blank'})
+                    var dataObj = {
+                        data:insertedValue,
+                        resource_nid:nid,
+                        agenda_nid:agenda_nid
+                    };
+                    $.ajax({
+                        url: url,
+                        data: dataObj,
+                        type:'POST',
+                        dataType:'json',
+                        success:function(response){
+                            console.log(response);
+                            if(response.success){
+                                alertElm.addClass('alert-success').html("Results Saved Successfully");
+                                clickedElm.parents('.agenda-list-item').append(resultsButton)
+                            }else{
+                                alertElm.addClass('alert-danger').html("Couldn't save results for Skill Assessment");
+                            }
+                        },
+                        error:function(response){
+                            alertElm.addClass('alert-danger').html("Couldn't save results for Skill Assessment");
+                        }
+                    }).always(function(){
+                        clickedElm.parents('.agenda-list-item').append(alertElm);
+                        clickedElm.parents('.agenda-list-item').find('.results-form-con').remove();
+                    });
+                })($(this));
+
+
+
+            }else{
+                //cant submit empty result
+                console.error("User must insert value into textarea before attempting to save");
+            }
+        }
+
+        function cancelSkillAssessmentResultsButtonClick(){
+            $(this).parents('.agenda-list-item').find('.add-sa-results').show();
+            $(this).parents('.agenda-list-item').find('.results-form-con').remove();
+        }
+
 		function removeAgendaItem(event){
 
 			var listItem = $(this).parent('.agenda-list-item');

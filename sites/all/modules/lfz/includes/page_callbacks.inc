@@ -171,7 +171,34 @@ function ajax_add_new_agenda_item_callback($date = false) {
 function ajax_agenda_today_add_callback($date = false, $nid = false, $class_nid = false) {
     $agenda_item_nid = ($nid) ? $nid : $_REQUEST['nid'];
     $class_nid = ($class_nid) ? $class_nid : $_REQUEST['class_nid'];
+
+    if(!isset($class_nid)){
+        //choose most relevant class
+        $classes = _get_current_classes();
+
+        if(count($classes) == 1){
+            $class_nid = $classes[0]->nid;
+        }else{
+            //this should error out
+            $res['success'] = false;
+
+            if(count($classes) == 0){
+                $res['content'] = "Don't have the ability to save agenda item without a class reference";
+            }else{
+                $res['content'] = $classes;
+            }
+
+            echo json_encode($res);
+            exit;
+        }
+    }
+
     $agenda_node = get_daily_agenda($date, $class_nid);
+
+    if(!$agenda_node){
+        //create agenda node
+        $agenda_node = _create_agenda_by_date($date, $class_nid);
+    }
 
     $res = array('success' => true, 'data' => null);
 
@@ -334,8 +361,6 @@ function weekly_agenda_callback($class_nid = false, $date = false) {
 function todays_agenda_callback($class_nid = false, $date = false) {
 
     if (!$class_nid) {
-
-
 
         $redirect_url = 'class/{class_nid}/today';
         if ($date) {
@@ -517,4 +542,49 @@ function skill_assessment_list_callback(){
 
 
     return $r;
+}
+
+function skill_assessment_save_results_callback(){
+
+    $data = $_REQUEST['data'];
+    $nid = $_REQUEST['resource_nid'];
+    $agenda_nid = $_REQUEST['agenda_nid'];
+    $agenda_node = node_load($agenda_nid);
+    $class_ref = $agenda_node->field_class_reference;
+    $sa_arr = _load_node_basic($nid);
+
+    $res = array();
+    $res['success'] = false;
+    $res['content'] = "Error saving results of skill assessment";
+
+    if(isset($sa_arr['title']) && isset($class_ref)){
+        $new_node = array(
+            'title'=>ucwords($sa_arr['title'].' results'),
+            'type'=>'skill_assessment_results',
+            'body'=>array(
+                'und'=>array(
+                    array('value'=>$data)
+                )
+            ),
+            'field_class_reference'=>array(
+                'und'=>array(
+                    array('nid'=>$class_ref['und'][0]['nid'])
+                )
+            ),
+            'field_related_resources'=>array(
+                'und'=>array(
+                    array('nid'=>$nid)
+                )
+            )
+        );
+
+        $create_results = _create_node($new_node);
+        if($create_results){
+            $res['success'] = true;
+            $res['content'] = "Saved skill assessment results";
+        }
+    }
+
+    echo json_encode($res);
+    exit;
 }
