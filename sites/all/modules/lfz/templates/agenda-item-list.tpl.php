@@ -12,6 +12,12 @@ $attr['class'] .= ' agenda-list-item';
 $attr['id'] = 'nid-' . $nid;
 $attr['data-nid'] = $nid;
 
+//check for resource type, otherwise use node type
+$type = (isset($resource_type)) ? $resource_type : $node_type;
+
+//skill assessment results
+$results = _get_results_by_sa_nid($nid);
+
 $ob = ini_get('output_buffering');
 
 if (!$ob) {
@@ -27,6 +33,21 @@ if (user_access('remove agenda items') && $removeBtn):
     <input type="button" class="btn btn-sm btn-danger pull-right remove-agenda-item" value="Remove">
 <?php
 endif;
+
+if (user_has_role(array_search('instructor', user_roles()))
+    && $type == 'sa'
+    && !$results) {
+    ?>
+    <input type="button" class="btn btn-sm btn-info pull-right add-sa-results" value="Add Results">
+<?php
+}
+
+if ($results && count($results) > 0) {
+    //also needs to be changed inside of agenda.js
+    $result_url = "skillassessment/details/" . $results['nid'];
+    print l('View Resutls', $result_url, array('attributes' => array('class' => 'btn btn-sm btn-default pull-right', 'target' => '_blank')));
+}
+
 ?>
     <span class="clearfix"></span>
 <?php
