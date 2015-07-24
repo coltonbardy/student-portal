@@ -701,3 +701,9 @@ body.node-type-resource #comments {
     from { transform: scale( 1 ) rotate( 0deg );   }
     to   { transform: scale( 1 ) rotate( 360deg ); }
 }
+
+.collapsed .caret{
+    -ms-transform: rotate(-90deg); /* IE 9 */
+    -webkit-transform: rotate(-90deg); /* Safari */
+    transform: rotate(-90deg);
+}

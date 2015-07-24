@@ -37,10 +37,12 @@
 
         ?>
         <div class="panel panel-default">
-            <div class="panel-heading" role="tab" id="headingOne">
+            <div class="panel-heading" role="tab">
+
                 <h4 class="panel-title">
                     <a role="button" data-toggle="collapse" data-parent="#accordion" href="#<?php print $element_id; ?>"
                        aria-expanded="true" aria-controls="collapseOne">
+                        <span class="caret"></span>
                         <?php print $user_name; ?>
                         <span
                             class="<?php print $label_class; ?>"><?php print round(($percent*100)).'% answered correctly' ?></span>

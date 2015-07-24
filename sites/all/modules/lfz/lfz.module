@@ -701,7 +701,7 @@ function _create_node($arr = array())
     //set default values
     $node->title = $arr['type'];
     $node->type = $arr['type'];
-    if($arr['body']){
+    if(isset($arr['body'])){
         $node->body = $arr['body'];
     }
     node_object_prepare($node); // Sets some defaults. Invokes hook_prepare() and hook_node_prepare().
