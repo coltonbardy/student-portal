@@ -165,7 +165,7 @@ function lfz_menu()
 
     $items['ajax/skillassessment/save-results'] = array(
         'page callback' => 'skill_assessment_save_results_callback',
-        'access arguments' => array('instructor'),
+        'access arguments' => array('manage skill assessments'),
         'type' => MENU_CALLBACK,
     );
 
@@ -215,6 +215,10 @@ function lfz_permission()
         'view agenda item details' => array(
             'title' => t('View agenda Item Details'),
             'description' => t('Can view agenda and agenda items Detail pages'),
+        ),
+        'manage skill assessments' => array(
+            'title' => t('Manage Skill Assessments'),
+            'description' => t('Manage Skill assessments and skill assessment results'),
         ),
     );
 }
