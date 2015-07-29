@@ -169,6 +169,12 @@ function lfz_menu()
         'type' => MENU_CALLBACK,
     );
 
+    $items['skillassessment/overview'] = array(
+        'page callback' => 'skill_assessment_overview_callback',
+        'access arguments' => array('manage skill assessments'),
+        'type' => MENU_CALLBACK,
+    );
+
 
     return $items;
 }
@@ -341,6 +347,12 @@ function lfz_theme($existing, $type, $theme, $path)
         'path' => drupal_get_path('module', 'lfz') . '/templates',
         'template' => 'bootstrap-media-object',
         'variables' => array("media_alignment" => "media-left", "media_html" => "", "heading" => "", "content" => ""),
+    );
+
+    $theme['skill_assessment_topic_overview'] = array(
+        'path' => drupal_get_path('module', 'lfz') . '/templates',
+        'template' => 'skill-assessment-topic-overview',
+        'variables' => array("data" => array()),
     );
 
     return $theme;
@@ -705,7 +717,7 @@ function _create_node($arr = array())
     //set default values
     $node->title = $arr['type'];
     $node->type = $arr['type'];
-    if(isset($arr['body'])){
+    if (isset($arr['body'])) {
         $node->body = $arr['body'];
     }
     node_object_prepare($node); // Sets some defaults. Invokes hook_prepare() and hook_node_prepare().
@@ -713,7 +725,7 @@ function _create_node($arr = array())
     $node->uid = $user->uid;
     $node->status = 1; //(1 or 0): published or not
     $node->promote = 0; //(1 or 0): promoted to front page
-    $node->comment = (isset($arr['comment']))?$arr['comment']:2; // 0 = comments disabled, 1 = read only, 2 = read/write
+    $node->comment = (isset($arr['comment'])) ? $arr['comment'] : 2; // 0 = comments disabled, 1 = read only, 2 = read/write
 
     //call function to do defaults for specific types
     $func = "create_" . $arr['type'];
@@ -968,7 +980,8 @@ function check_user_roles($instructor, $student)
     return $r;
 }
 
-function _get_results_by_sa_nid($nid=false){
+function _get_results_by_sa_nid($nid = false)
+{
 
     $sql = "SELECT node.title AS node_title, node.nid AS nid
             FROM
@@ -976,7 +989,63 @@ function _get_results_by_sa_nid($nid=false){
             LEFT JOIN {field_data_field_related_resources} field_data_field_related_resources ON node.nid = field_data_field_related_resources.entity_id AND (field_data_field_related_resources.entity_type = 'node' AND field_data_field_related_resources.deleted = '0')
             WHERE (( (node.status = '1') AND (node.type IN  ('skill_assessment_results')) AND (field_data_field_related_resources.field_related_resources_nid IN  (:nid)) ))";
 
-    $result = db_query($sql, array(':nid'=>array($nid)));
+    $result = db_query($sql, array(':nid' => array($nid)));
 
     return $result->fetchAssoc();
+}
+
+function _get_sa_link_by_result_nid($result_nid)
+{
+
+    $result_node = node_load($result_nid);
+
+    $sa_nid = (isset($result_node->field_related_resources['und'])) ? $result_node->field_related_resources['und'][0]['nid'] : false;
+
+    if (!$sa_nid) {
+        return false;
+    }
+
+    $sa_node = node_load($sa_nid);
+
+    $r = array(
+        'student' => null,
+        'instructor' => null
+    );
+
+    if (isset($sa_node->field_reference_link['und'])) {
+        $r['student'] = $sa_node->field_reference_link['und'][0]['value'];
+    }
+
+    if (isset($sa_node->field_instructor_reference_link['und'])) {
+        $r['instructor'] = $sa_node->field_instructor_reference_link['und'][0]['value'];
+    }
+
+
+    return $r;
+}
+
+
+function _get_user_get_basic_info($uid = false)
+{
+    $r = array(
+        'uid' => $uid,
+        'name' => '',
+        'username' => '',
+        'email' => '',
+        'roles' => array()
+    );
+
+    //@TODO - replace with sql call instead of loading all information then filtering
+    $user = user_load($uid);
+
+    if ($user) {
+        $r['email'] = $user->mail;
+        $r['username'] = $user->name;
+        $r['roles'] = $user->roles;
+        $first_name = (isset($user->field_first_name['und'])) ? $user->field_first_name['und'][0]['safe_value'] : '';
+        $last_name = (isset($user->field_last_name['und'])) ? $user->field_last_name['und'][0]['safe_value'] : '';
+        $r['name'] = $first_name . ' ' . $last_name;
+    }
+
+    return $r;
 }

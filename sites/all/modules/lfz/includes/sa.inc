@@ -269,14 +269,24 @@ function _parse_user_responses($data, &$errors)
                     if ($topic != ""
                         && array_search($topic, $temp_user_arr['data']['suggested_improvement']['topics']) === false
                     ) {
-                        $temp_user_arr['data']['suggested_improvement']['topics'][] = $topic;
+                        $temp_user_arr['data']['suggested_improvement']['topics'][] = array(
+                            'name'=>$topic,
+                            'question'=>$q['question'],
+                            'response'=>$response[$q['question']],
+                            'answer'=>$q['answer']
+                        );
                     }
 
                     //check that the skill is not empty and doesnt exist in the array
                     if ($skill != ""
                         && array_search($skill, $temp_user_arr['data']['suggested_improvement']['skills']) === false
                     ) {
-                        $temp_user_arr['data']['suggested_improvement']['skills'][] = $skill;
+                        $temp_user_arr['data']['suggested_improvement']['skills'][] = array(
+                            'name'=>$skill,
+                            'question'=>$q['question'],
+                            'response'=>$response[$q['question']],
+                            'answer'=>$q['answer']
+                        );
                     }
                 }
             }
@@ -389,6 +399,112 @@ function _evaluate_user_response($answer, $response, $options = array())
 
             break;
     }
+
+    return $r;
+}
+
+function _get_assessment_data($nid=false){
+
+    global $user;
+
+    $values = array();
+    $r = array();
+
+    //get all assessment data
+    if(!$nid){
+
+        $sql = "";
+        //get all assessment results for instructors
+        if (user_has_role(array_search('instructor', user_roles()))) {
+            $sql = 'SELECT nid, title, changed FROM {node} WHERE type=:type ORDER BY changed DESC';
+        }else if(user_has_role(array_search('student', user_roles()))){
+            //get results for specific students roles
+            $sql = "SELECT node.title AS title, node.nid AS nid, node.changed AS changed, 'node' AS field_data_field_class_reference_node_entity_type
+                FROM
+                {node} node
+                LEFT JOIN {field_data_field_class_reference} field_data_field_class_reference ON node.nid = field_data_field_class_reference.entity_id AND (field_data_field_class_reference.entity_type = 'node' AND field_data_field_class_reference.deleted = '0')
+                LEFT JOIN {node} node_field_data_field_class_reference ON field_data_field_class_reference.field_class_reference_nid = node_field_data_field_class_reference.nid
+                LEFT JOIN {field_data_field_access_roles} node_field_data_field_class_reference__field_data_field_access_roles ON node_field_data_field_class_reference.nid = node_field_data_field_class_reference__field_data_field_access_roles.entity_id AND (node_field_data_field_class_reference__field_data_field_access_roles.entity_type = 'node' AND node_field_data_field_class_reference__field_data_field_access_roles.deleted = '0')
+                WHERE (( (node.status = '1')
+                    AND (node.type=:type)
+                  AND (node_field_data_field_class_reference__field_data_field_access_roles.field_access_roles_value IN (:roles)) ))
+                ORDER BY node.changed ASC";
+
+            $values[":roles"] = array_keys($user->roles);
+        }
+
+        $values[':type'] = 'skill_assessment_results';
+
+        if(strlen($sql) > 0){
+            $query = db_query($sql, $values);
+
+            while($result = $query->fetchAssoc()){
+                $r[] = $result;
+            }
+        }
+
+    }else{
+        $r[] = _load_node_basic($nid);
+    }
+
+    return $r;
+}
+
+function _get_results_data($nid){
+    //create an error array to be passed along as reference for any errors that could happen
+    $errors = array();
+    $r = array(
+        'nid'=>$nid,
+        'errors'=>array(),
+        'formatted'=>array()
+    );
+
+
+    //include Reader CSV class for easy csv manipulation
+    module_load_include('php', 'lfz', 'lib/EasyCSV/Reader');
+    //load the current node data based on the url
+    $node = node_load($nid);
+
+    //results data pulled from the body of the Skill Assessment Result content type
+    $csv_data = $node->body['und'][0]['value'];
+
+    //create temp file for Reader class to load and process
+    $temp_csv_file = DRUPAL_ROOT . '/' . drupal_get_path('module', 'lfz').'/tmp/sa/'.$nid.'-results.csv';
+
+    //put csv into a temp file for reading with library
+    if(!file_put_contents($temp_csv_file, $csv_data)){
+        $r['errors'][] = "Unable to write temp csv file to read from : ".$temp_csv_file;
+    }
+
+    //load temp csv file
+    // CSV format is based on the google doc here
+    //
+    $reader = new \EasyCSV\Reader($temp_csv_file);
+    $lib_data = $reader->getAll();
+
+    $r['formatted']['raw'] = $lib_data;
+
+    //get csv row types
+    $row_type_data = _row_type_data($lib_data);
+    $r['formatted']['row_type'] = $row_type_data;
+
+    $meta_data = _parse_meta_data($row_type_data['meta_data']);
+    if(!$meta_data){
+        $r['errors'][] = "Meta Data wasn't able to be parsed";
+    }
+
+    $r['formatted']['meta_data'] = $meta_data;
+
+    $responses =  _parse_response($lib_data, $meta_data);
+    if(!$responses){
+        $r['errors'][] = "No responses could be parsed from the data received";
+    }
+
+    $questions_data = _format_question_data($lib_data, $errors);
+    $r['formatted']['questions'] = $questions_data;
+
+    $user_responses = _parse_user_responses($lib_data, $errors);
+    $r['formatted']['user'] = $user_responses;
 
     return $r;
 }

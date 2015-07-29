@@ -82,7 +82,7 @@
                         <div class="well well-sm">
                             <ul class="list-group">
                                 <?php foreach ($user_data['data']['suggested_improvement']['topics'] as $topic): ?>
-                                    <li class="list-group-item"><?php print $topic; ?></li>
+                                    <li class="list-group-item"><?php print $topic['name']; ?></li>
                                 <?php endforeach; ?>
                             </ul>
                         </div>

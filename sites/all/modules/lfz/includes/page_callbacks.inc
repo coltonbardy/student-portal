@@ -1,7 +1,8 @@
 <?php
 
 
-function ajax_remove_agenda_item_callback() {
+function ajax_remove_agenda_item_callback()
+{
 
     $agenda_nid = $_REQUEST['agenda_nid'];
     $item_nid = $_REQUEST['item_nid'];
@@ -26,14 +27,15 @@ function ajax_remove_agenda_item_callback() {
     drupal_json_output($res);
 }
 
-function ajax_agenda_item_save() {
+function ajax_agenda_item_save()
+{
     $item_nid = $_REQUEST['item_nid'];
     $current_agenda_id = $_REQUEST['current_agenda_id'];
     $new_agenda_id = $_REQUEST['new_agenda_id'];
     $new_index = $_REQUEST['new_index'];
     $current_index = $_REQUEST['current_index'];
     $agenda_date = $_REQUEST['agenda_date'];
-    $clone = (bool) $_REQUEST['clone'];
+    $clone = (bool)$_REQUEST['clone'];
     $date = $_REQUEST['agenda_date'];
     $class_nid = $_REQUEST['class_nid'];
 
@@ -96,7 +98,8 @@ function ajax_agenda_item_save() {
     exit;
 }
 
-function ajax_agenda_item_search_callback($search_val) {
+function ajax_agenda_item_search_callback($search_val)
+{
 
     $content = theme('bootstrap_list_item',
         array(
@@ -136,7 +139,8 @@ function ajax_agenda_item_search_callback($search_val) {
     exit;
 }
 
-function ajax_get_agenda_type_callback() {
+function ajax_get_agenda_type_callback()
+{
 
     //#TODO make the types dynamic
     $types = array('agenda', 'assignment', 'projects', 'resource', 'topics');
@@ -152,7 +156,8 @@ function ajax_get_agenda_type_callback() {
     exit;
 }
 
-function ajax_add_new_agenda_item_callback($date = false) {
+function ajax_add_new_agenda_item_callback($date = false)
+{
     $title = $_REQUEST['title'];
     $type = $_REQUEST['type'];
 
@@ -168,23 +173,24 @@ function ajax_add_new_agenda_item_callback($date = false) {
     }
 }
 
-function ajax_agenda_today_add_callback($date = false, $nid = false, $class_nid = false) {
+function ajax_agenda_today_add_callback($date = false, $nid = false, $class_nid = false)
+{
     $agenda_item_nid = ($nid) ? $nid : $_REQUEST['nid'];
     $class_nid = ($class_nid) ? $class_nid : $_REQUEST['class_nid'];
 
-    if(!isset($class_nid)){
+    if (!isset($class_nid)) {
         //choose most relevant class
         $classes = _get_current_classes();
 
-        if(count($classes) == 1){
+        if (count($classes) == 1) {
             $class_nid = $classes[0]->nid;
-        }else{
+        } else {
             //this should error out
             $res['success'] = false;
 
-            if(count($classes) == 0){
+            if (count($classes) == 0) {
                 $res['content'] = "Don't have the ability to save agenda item without a class reference";
-            }else{
+            } else {
                 $res['content'] = $classes;
             }
 
@@ -195,7 +201,7 @@ function ajax_agenda_today_add_callback($date = false, $nid = false, $class_nid 
 
     $agenda_node = get_daily_agenda($date, $class_nid);
 
-    if(!$agenda_node){
+    if (!$agenda_node) {
         //create agenda node
         $agenda_node = _create_agenda_by_date($date, $class_nid);
     }
@@ -221,7 +227,8 @@ function ajax_agenda_today_add_callback($date = false, $nid = false, $class_nid 
     exit;
 }
 
-function ajax_get_agenda_items_callback($date = false) {
+function ajax_get_agenda_items_callback($date = false)
+{
     $class_nid = ($_REQUEST && isset($_REQUEST['class_nid'])) ? $_REQUEST['class_nid'] : false;
 
     $agenda_node = get_daily_agenda($date, $class_nid);
@@ -247,7 +254,8 @@ function ajax_get_agenda_items_callback($date = false) {
     exit;
 }
 
-function weekly_agenda_callback($class_nid = false, $date = false) {
+function weekly_agenda_callback($class_nid = false, $date = false)
+{
 
     if (!$class_nid) {
 
@@ -258,7 +266,7 @@ function weekly_agenda_callback($class_nid = false, $date = false) {
 
         //get user classes and then redirect if the user only has access to one class
         $users_classes = _get_users_classes();
-        if(count($users_classes) === 1){
+        if (count($users_classes) === 1) {
             $redirect_url = str_replace("{class_nid}", $users_classes[0]->nid, $redirect_url);
             drupal_goto($redirect_url);
         }
@@ -359,7 +367,8 @@ function weekly_agenda_callback($class_nid = false, $date = false) {
     return theme('weekly_agenda', array('days' => $week_results));
 }
 
-function todays_agenda_callback($class_nid = false, $date = false) {
+function todays_agenda_callback($class_nid = false, $date = false)
+{
 
     if (!$class_nid) {
 
@@ -370,7 +379,7 @@ function todays_agenda_callback($class_nid = false, $date = false) {
 
         //get user classes and then redirect if the user only has access to one class
         $users_classes = _get_users_classes();
-        if(count($users_classes) === 1){
+        if (count($users_classes) === 1) {
             $redirect_url = str_replace("{class_nid}", $users_classes[0]->nid, $redirect_url);
             drupal_goto($redirect_url);
         }
@@ -423,55 +432,16 @@ function todays_agenda_callback($class_nid = false, $date = false) {
     return $return;
 }
 
-function skill_assessment_details_callback($nid){
+function skill_assessment_details_callback($nid)
+{
 
     global $user;
-    //create an error array to be passed along as reference for any errors that could happen
-    $errors = array();
 
-    //include Reader CSV class for easy csv manipulation
-    module_load_include('php', 'lfz', 'lib/EasyCSV/Reader');
-    //load the current node data based on the url
-    $node = node_load($nid);
-
-    drupal_set_title("Skill Assessment - ".$node->title." Results");
-
-    //results data pulled from the body of the Skill Assessment Result content type
-    $data = $node->body['und'][0]['value'];
-    
-    //create temp file for Reader class to load and process
-    $temp_csv_file = DRUPAL_ROOT . '/' . drupal_get_path('module', 'lfz').'/tmp/sa/'.$nid.'-results.csv';
-
-    if(!file_put_contents($temp_csv_file, $data)){
-        $errors[] = "Unable to write temp csv file to read from : ".$temp_csv_file;
-    }
-
-    //load temp csv file
-    // CSV format is based on the google doc here
-    //
-    $reader = new \EasyCSV\Reader($temp_csv_file);
-    $data = $reader->getAll();
-
-    //get csv row types
-    $row_type_data = _row_type_data($data);
-
-    $meta_data = _parse_meta_data($row_type_data['meta_data']);
-    if(!$meta_data){
-        $errors[] = "Meta Data wasn't able to be parsed";
-    }
-
-    $responses =  _parse_response($data, $meta_data);
-    if(!$responses){
-        $errors[] = "No responses could be parsed from the data received";
-    }
-
-    $questions_data = _format_question_data($data, $errors);
-
-    $user_responses = _parse_user_responses($data, $errors);
+    $results = _get_results_data($nid);
 
     //currently print out errors, should be themed
-    if(count($errors) > 0 ){
-        foreach($errors as $error){
+    if (count($results['errors']) > 0) {
+        foreach ($results['errors'] as $error) {
             drupal_set_message($error, "warning");
         }
     }
@@ -481,14 +451,15 @@ function skill_assessment_details_callback($nid){
     //show all users for instructor role users
     if (user_has_role(array_search('instructor', user_roles()))) {
         //loop through each response and send the data to the template
-        $theme_data = array("data"=>$user_responses);
+        $theme_data = array("data" => $results['formatted']['user']);
         //only show the current student data if the user has a role of student
-    }else if(user_has_role(array_search('student', user_roles()))
-        && isset($user_responses[$user->uid])){
-        $student_data = $user_responses[$user->uid];
+    } else if (user_has_role(array_search('student', user_roles()))
+        && isset($results['formatted']['user'][$user->uid])
+    ) {
+        $student_data = $results['formatted']['user'][$user->uid];
         $theme_data = array("data" => array($student_data));
-    }else{
-        $theme_data = array("data"=>array());
+    } else {
+        $theme_data = array("data" => array());
     }
 
     $r = theme("skill_assessment_user_list", $theme_data);
@@ -496,48 +467,18 @@ function skill_assessment_details_callback($nid){
     return $r;
 }
 
-function skill_assessment_list_callback(){
+function skill_assessment_list_callback()
+{
 
     global $user;
 
     drupal_set_title("Skill Assessments Taken");
 
-    $sql = "";
-    $values = array();
+    $data = _get_assessment_data();
 
-    if (user_has_role(array_search('instructor', user_roles()))) {
-        $sql = 'SELECT nid, title, changed FROM {node} WHERE type=:type ORDER BY changed DESC';
-        $values = array(":type"=>"skill_assessment_results");
-    }else if(user_has_role(array_search('student', user_roles()))){
-        
-        $sql = "SELECT node.title AS title, node.nid AS nid, node.changed AS changed, 'node' AS field_data_field_class_reference_node_entity_type
-                FROM
-                {node} node
-                LEFT JOIN {field_data_field_class_reference} field_data_field_class_reference ON node.nid = field_data_field_class_reference.entity_id AND (field_data_field_class_reference.entity_type = 'node' AND field_data_field_class_reference.deleted = '0')
-                LEFT JOIN {node} node_field_data_field_class_reference ON field_data_field_class_reference.field_class_reference_nid = node_field_data_field_class_reference.nid
-                LEFT JOIN {field_data_field_access_roles} node_field_data_field_class_reference__field_data_field_access_roles ON node_field_data_field_class_reference.nid = node_field_data_field_class_reference__field_data_field_access_roles.entity_id AND (node_field_data_field_class_reference__field_data_field_access_roles.entity_type = 'node' AND node_field_data_field_class_reference__field_data_field_access_roles.deleted = '0')
-                WHERE (( (node.status = '1')
-                    AND (node.type IN  ('skill_assessment_results'))
-                  AND (node_field_data_field_class_reference__field_data_field_access_roles.field_access_roles_value IN (:roles)) ))
-                ORDER BY node.changed ASC";
+    $r = theme("skill_assessment_list", array("data" => $data));
 
-        $values = array(":roles"=>array_keys($user->roles));
-    }
-
-    $data = array();
-
-    if(strlen($sql) > 0){
-        $query = db_query($sql, $values);
-
-        while($result = $query->fetchAssoc()){
-            $data[] = $result;
-        }
-    }
-
-
-    $r = theme("skill_assessment_list", array("data"=>$data));
-
-    if(count($data) == 0){
+    if (count($data) == 0) {
         $r = "No Results for this page";
     }
 
@@ -545,7 +486,8 @@ function skill_assessment_list_callback(){
     return $r;
 }
 
-function skill_assessment_save_results_callback(){
+function skill_assessment_save_results_callback()
+{
 
     $data = $_REQUEST['data'];
     $nid = $_REQUEST['resource_nid'];
@@ -558,29 +500,29 @@ function skill_assessment_save_results_callback(){
     $res['success'] = false;
     $res['content'] = "Error saving results of skill assessment";
 
-    if(isset($sa_arr['title']) && isset($class_ref)){
+    if (isset($sa_arr['title']) && isset($class_ref)) {
         $new_node = array(
-            'title'=>ucwords($sa_arr['title'].' results'),
-            'type'=>'skill_assessment_results',
-            'body'=>array(
-                'und'=>array(
-                    array('value'=>$data)
+            'title' => ucwords($sa_arr['title'] . ' results'),
+            'type' => 'skill_assessment_results',
+            'body' => array(
+                'und' => array(
+                    array('value' => $data)
                 )
             ),
-            'field_class_reference'=>array(
-                'und'=>array(
-                    array('nid'=>$class_ref['und'][0]['nid'])
+            'field_class_reference' => array(
+                'und' => array(
+                    array('nid' => $class_ref['und'][0]['nid'])
                 )
             ),
-            'field_related_resources'=>array(
-                'und'=>array(
-                    array('nid'=>$nid)
+            'field_related_resources' => array(
+                'und' => array(
+                    array('nid' => $nid)
                 )
             )
         );
 
         $create_results = _create_node($new_node);
-        if($create_results){
+        if ($create_results) {
             $res['success'] = true;
             $res['content'] = "Saved skill assessment results";
         }
@@ -588,4 +530,76 @@ function skill_assessment_save_results_callback(){
 
     echo json_encode($res);
     exit;
+}
+
+function skill_assessment_overview_callback()
+{
+    $data = _get_assessment_data();
+
+    $all_data = array();
+
+    $issue_topic_data = array();
+
+    foreach ($data as $d) {
+        $sa_results = _get_results_data($d['nid']);
+
+        foreach ($sa_results as $sa) {
+            if(!isset($sa['user'])){
+                continue;
+            }
+            $users = $sa['user'];
+
+            foreach ($users as $user) {
+                $topics = $user['data']['suggested_improvement']['topics'];
+
+                foreach ($topics as $topic) {
+                    if (!isset($issue_topic_data[$topic['name']])) {
+                        $issue_topic_data[$topic['name']] = array(
+                            'questions'=>array(),
+                        );
+                    }
+
+                    $result_nid = $d['nid'];
+
+                    $links = _get_sa_link_by_result_nid($result_nid);
+
+                    $key = $result_nid . '-' . $topic['question'];
+
+                    $issue_topic_data[$topic['name']]['questions'][$key] = array(
+                        'results_nid'=>$result_nid,
+                        'sa_links'=>$links,
+                        'question' => $topic['question'],
+                        'user_answers' => array(),
+                        'correct_answer'=>$topic['answer']
+                    );
+
+                    $issue_topic_data[$topic['name']]['questions'][$key]['user_answers'][$user['uid']] = array(
+                        "user_info"=> _get_user_get_basic_info($user['uid']),
+                        "response"=>$topic['response']
+                    );
+
+                    if(!isset($issue_topic_data[$topic['name']]['users'])){
+                        $issue_topic_data[$topic['name']]['users'] = array();
+                    }
+                    $issue_topic_data[$topic['name']]['users'][$user['uid']] = $user['uid'];
+                }
+            }
+
+        }
+    }
+
+    function sort_topic_data($a, $b){
+
+        if(count($a['users']) == count($b['users'])){
+            return 0;
+        }
+
+        return (count($a['users']) < count($b['users']))? 1 : -1;
+    }
+
+    uasort($issue_topic_data, "sort_topic_data");
+
+    $r = theme('skill_assessment_topic_overview', array('data'=>$issue_topic_data));
+
+    return $r;
 }
