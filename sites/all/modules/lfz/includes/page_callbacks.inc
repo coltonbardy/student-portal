@@ -264,18 +264,7 @@ function weekly_agenda_callback($class_nid = false, $date = false)
             $redirect_url .= '/' . $date;
         }
 
-        //get user classes and then redirect if the user only has access to one class
-        $users_classes = _get_users_classes();
-        if (count($users_classes) === 1) {
-            $redirect_url = str_replace("{class_nid}", $users_classes[0]->nid, $redirect_url);
-            drupal_goto($redirect_url);
-        }
-
-
-        drupal_add_js(array('lfz' => array('redirect_url' => $redirect_url)),
-            'setting');
-
-        return _agenda_select_class('week');
+        return _agenda_select_class($redirect_url);
     }
 
     $class = node_load($class_nid);
@@ -377,16 +366,7 @@ function todays_agenda_callback($class_nid = false, $date = false)
             $redirect_url .= '/' . $date;
         }
 
-        //get user classes and then redirect if the user only has access to one class
-        $users_classes = _get_users_classes();
-        if (count($users_classes) === 1) {
-            $redirect_url = str_replace("{class_nid}", $users_classes[0]->nid, $redirect_url);
-            drupal_goto($redirect_url);
-        }
-
-        drupal_add_js(array('lfz' => array('redirect_url' => $redirect_url)),
-            'setting');
-        return _agenda_select_class('today');
+        return _agenda_select_class($redirect_url);
     }
 
     $class = node_load($class_nid);
@@ -532,8 +512,15 @@ function skill_assessment_save_results_callback()
     exit;
 }
 
-function skill_assessment_overview_callback()
+function skill_assessment_overview_callback($class_nid=false)
 {
+
+    //check for class nid ortherwise give a form for use to select the class
+    if (!$class_nid) {
+        $redirect_url = 'skillassessment/overview/{class_nid}';
+
+        return _agenda_select_class($redirect_url);
+    }
 
     drupal_set_title("Assessment Overview");
     $data = _get_assessment_data();

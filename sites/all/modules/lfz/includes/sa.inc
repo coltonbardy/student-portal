@@ -508,3 +508,7 @@ function _get_results_data($nid){
 
     return $r;
 }
+
+function _get_overview_topic_data(){
+
+}
