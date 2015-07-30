@@ -170,8 +170,18 @@ function lfz_menu()
     );
 
     $items['skillassessment/overview'] = array(
+        'title' => 'Skill Assessment Overview',
         'page callback' => 'skill_assessment_overview_callback',
         'access arguments' => array('manage skill assessments'),
+        'expanded' => TRUE,
+    );
+
+    $items['skillassessment/overview/class/%'] = array(
+        'title' => 'Skill Assessment Overview Per Class',
+        'page callback' => 'skill_assessment_overview_callback',
+        'callback arguments' => array(3),
+        'page arguments' => array('manage skill assessments'),
+        'expanded' => TRUE,
         'type' => MENU_CALLBACK,
     );
 
@@ -476,21 +486,24 @@ function get_agenda_items_by_agenda($agenda_node)
     return (count($r) > 0) ? $r : false;
 }
 
-function _agenda_select_class($url_key = '')
+function _agenda_select_class($redirect_url='')
 {
 
-    $class_list = _get_user_class_list();
-
-    if (count($class_list) === 0) {
-        //User has no access to classes
-    } else if (count($class_list) === 1) {
-        $url = 'class/' . $class_list[0]->nid . '/' . $url_key;
-        drupal_goto($url);
+    $users_classes = _get_users_classes();
+    if (count($users_classes) === 1 &&
+        $redirect_url != '') {
+        $redirect_url = str_replace("{class_nid}", $users_classes[0]->nid, $redirect_url);
+        drupal_goto($redirect_url);
     }
 
+    //add redirect url to the settings to be used by the class select elemtn
+    drupal_add_js(array('lfz' => array('redirect_url' => $redirect_url)),
+        'setting');
+
+    //add js handling for the class selection and redirecting
     drupal_add_js(drupal_get_path('module', 'lfz') . "/misc/class-select.js");
 
-    return drupal_get_form('lfz_select_class_form', $class_list);
+    return drupal_get_form('lfz_select_class_form', $users_classes);
 }
 
 function lfz_select_class_form($form, &$form_state, $class_list = array())
