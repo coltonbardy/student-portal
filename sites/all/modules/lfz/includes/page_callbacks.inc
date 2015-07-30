@@ -534,6 +534,8 @@ function skill_assessment_save_results_callback()
 
 function skill_assessment_overview_callback()
 {
+
+    drupal_set_title("Assessment Overview");
     $data = _get_assessment_data();
 
     $all_data = array();
@@ -551,7 +553,6 @@ function skill_assessment_overview_callback()
 
             foreach ($users as $user) {
                 $topics = $user['data']['suggested_improvement']['topics'];
-
                 foreach ($topics as $topic) {
                     if (!isset($issue_topic_data[$topic['name']])) {
                         $issue_topic_data[$topic['name']] = array(
@@ -563,19 +564,22 @@ function skill_assessment_overview_callback()
 
                     $links = _get_sa_link_by_result_nid($result_nid);
 
-                    $key = $result_nid . '-' . $topic['question'];
+                    $key = $result_nid . '-' . htmlentities($topic['question']);
 
-                    $issue_topic_data[$topic['name']]['questions'][$key] = array(
-                        'results_nid'=>$result_nid,
-                        'sa_links'=>$links,
-                        'question' => $topic['question'],
-                        'user_answers' => array(),
-                        'correct_answer'=>$topic['answer']
-                    );
+                    if(!isset($issue_topic_data[$topic['name']]['questions'][$key])){
+                        $issue_topic_data[$topic['name']]['questions'][$key] = array(
+                            'results_nid'=>$result_nid,
+                            'sa_links'=>$links,
+                            'question' => htmlentities($topic['question']),
+                            'user_answers' => array(),
+                            'correct_answer'=>htmlentities($topic['answer'])
+                        );
+                    }
+
 
                     $issue_topic_data[$topic['name']]['questions'][$key]['user_answers'][$user['uid']] = array(
                         "user_info"=> _get_user_get_basic_info($user['uid']),
-                        "response"=>$topic['response']
+                        "response"=>htmlentities($topic['response'])
                     );
 
                     if(!isset($issue_topic_data[$topic['name']]['users'])){

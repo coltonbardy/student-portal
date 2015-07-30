@@ -7,7 +7,7 @@
 
     $i = 0;
     foreach ($data as $user_data):
-        
+
         $user = user_load($user_data['uid']);
         $user_name = $user->field_first_name['und'][0]['value'] . ' ' . $user->field_last_name['und'][0]['value'];
         $element_id = "collapse" . $user->uid;
@@ -26,7 +26,7 @@
 
         $label_class = "label";
         //unknown answered vs total number of questions to get unknown percent
-        $not_answered_percent = (($user_data['data']['unknown_answered'] / count($user_data['questions']))*100);
+        $not_answered_percent = (($user_data['data']['unknown_answered'] / count($user_data['questions'])) * 100);
 
         foreach ($class_to_grade as $key => $value) {
             if ($percent >= $value) {
@@ -45,9 +45,9 @@
                         <span class="caret"></span>
                         <?php print $user_name; ?>
                         <span
-                            class="<?php print $label_class; ?>"><?php print round(($percent*100)).'% answered correctly' ?></span>
+                            class="<?php print $label_class; ?>"><?php print round(($percent * 100)) . '% answered correctly' ?></span>
                         <span
-                            class="label label-default"><?php print round($not_answered_percent).'% not answered' ?></span>
+                            class="label label-default"><?php print round($not_answered_percent) . '% not answered' ?></span>
                     </a>
                 </h4>
             </div>
@@ -68,7 +68,8 @@
                                     <p>User Reponse : <?php print htmlspecialchars($question['response']); ?></p>
                                 </div>
                                 <?php if (!$question['correct']): ?>
-                                    <div class="panel-footer">Correct Answer : <?php print htmlspecialchars($question['answer']); ?></div>
+                                    <div class="panel-footer">Correct Answer
+                                        : <?php print htmlspecialchars($question['answer']); ?></div>
                                 <?php endif; ?>
 
                             </div>
@@ -79,6 +80,7 @@
                     </div>
                     <div class="col-xs-6">
                         <h4>Suggested Items To Review</h4>
+
                         <div class="well well-sm">
                             <ul class="list-group">
                                 <?php foreach ($user_data['data']['suggested_improvement']['topics'] as $topic): ?>
