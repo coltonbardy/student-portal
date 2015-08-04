@@ -76,6 +76,7 @@ function ajax_agenda_item_save()
 
             //old agenda remove index to add it back in
             if (!_remove_agenda_item_from_agenda($remove_from_agenda, $item_nid, $current_index)) {
+
                 $res['content'] = 'Unable to remove agenda item:' . $item_nid . ' from agenda:' . $remove_from_agenda->nid;
                 echo json_encode($res);
                 exit;
@@ -521,76 +522,15 @@ function skill_assessment_overview_callback($class_nid=false)
 
         return _agenda_select_class($redirect_url);
     }
-
     drupal_set_title("Assessment Overview");
+
     $data = _get_assessment_data();
 
-    $all_data = array();
+    $template_data = array();
 
-    $issue_topic_data = array();
+    $template_data['topic_by_question'] = _get_overview_issue_topic_data_by_question($data);
 
-    foreach ($data as $d) {
-        $sa_results = _get_results_data($d['nid']);
-
-        foreach ($sa_results as $sa) {
-            if(!isset($sa['user'])){
-                continue;
-            }
-            $users = $sa['user'];
-
-            foreach ($users as $user) {
-                $topics = $user['data']['suggested_improvement']['topics'];
-                foreach ($topics as $topic) {
-                    if (!isset($issue_topic_data[$topic['name']])) {
-                        $issue_topic_data[$topic['name']] = array(
-                            'questions'=>array(),
-                        );
-                    }
-
-                    $result_nid = $d['nid'];
-
-                    $links = _get_sa_link_by_result_nid($result_nid);
-
-                    $key = $result_nid . '-' . htmlentities($topic['question']);
-
-                    if(!isset($issue_topic_data[$topic['name']]['questions'][$key])){
-                        $issue_topic_data[$topic['name']]['questions'][$key] = array(
-                            'results_nid'=>$result_nid,
-                            'sa_links'=>$links,
-                            'question' => htmlentities($topic['question']),
-                            'user_answers' => array(),
-                            'correct_answer'=>htmlentities($topic['answer'])
-                        );
-                    }
-
-
-                    $issue_topic_data[$topic['name']]['questions'][$key]['user_answers'][$user['uid']] = array(
-                        "user_info"=> _get_user_get_basic_info($user['uid']),
-                        "response"=>htmlentities($topic['response'])
-                    );
-
-                    if(!isset($issue_topic_data[$topic['name']]['users'])){
-                        $issue_topic_data[$topic['name']]['users'] = array();
-                    }
-                    $issue_topic_data[$topic['name']]['users'][$user['uid']] = $user['uid'];
-                }
-            }
-
-        }
-    }
-
-    function sort_topic_data($a, $b){
-
-        if(count($a['users']) == count($b['users'])){
-            return 0;
-        }
-
-        return (count($a['users']) < count($b['users']))? 1 : -1;
-    }
-
-    uasort($issue_topic_data, "sort_topic_data");
-
-    $r = theme('skill_assessment_topic_overview', array('data'=>$issue_topic_data));
+    $r = theme('skill_assessment_overview', array('data'=>$template_data));
 
     return $r;
 }

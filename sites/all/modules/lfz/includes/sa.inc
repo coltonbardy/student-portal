@@ -123,7 +123,7 @@ function _parse_question_types($data, $meta_data)
 
 }
 
-function _parse_questions($data, $meta_data)
+function _parse_questions($data, $meta_data, &$errors)
 {
     $r = array();
 
@@ -138,6 +138,7 @@ function _parse_questions($data, $meta_data)
             $reached_first_question = true;
         }
 
+
         if ($reached_first_question && $key != "") {
             $r[] = array(
                 "question" => $key,
@@ -146,6 +147,10 @@ function _parse_questions($data, $meta_data)
         }
 
         $i++;
+    }
+
+    if(!$reached_first_question){
+        $errors[] = "First question meta data doesn't match questions asked";
     }
 
     return $r;
@@ -167,7 +172,7 @@ function _format_question_data($data, &$errors)
         $errors[] = "Unable to determine answers row";
     }
 
-    $questions = _parse_questions($data, $meta_data);
+    $questions = _parse_questions($data, $meta_data, $errors);
 
     $question_data_keys = array(
         'question_type',
@@ -506,9 +511,75 @@ function _get_results_data($nid){
     $user_responses = _parse_user_responses($lib_data, $errors);
     $r['formatted']['user'] = $user_responses;
 
+    $r['errors'] = array_unique($errors);
+
     return $r;
 }
 
-function _get_overview_topic_data(){
+function _get_overview_issue_topic_data_by_question($data){
 
+    $issue_topic_data_by_question = array();
+
+    foreach ($data as $d) {
+        $sa_results = _get_results_data($d['nid']);
+
+        foreach ($sa_results as $sa) {
+            if(!isset($sa['user'])){
+                continue;
+            }
+            $users = $sa['user'];
+
+            foreach ($users as $user) {
+                $topics = $user['data']['suggested_improvement']['topics'];
+                foreach ($topics as $topic) {
+                    if (!isset($issue_topic_data_by_question[$topic['name']])) {
+                        $issue_topic_data[$topic['name']] = array(
+                            'questions'=>array(),
+                        );
+                    }
+
+                    $result_nid = $d['nid'];
+
+                    $links = _get_sa_link_by_result_nid($result_nid);
+
+                    $key = $result_nid . '-' . htmlentities($topic['question']);
+
+                    if(!isset($issue_topic_data_by_question[$topic['name']]['questions'][$key])){
+                        $issue_topic_data_by_question[$topic['name']]['questions'][$key] = array(
+                            'results_nid'=>$result_nid,
+                            'sa_links'=>$links,
+                            'question' => htmlentities($topic['question']),
+                            'user_answers' => array(),
+                            'correct_answer'=>htmlentities($topic['answer'])
+                        );
+                    }
+
+
+                    $issue_topic_data_by_question[$topic['name']]['questions'][$key]['user_answers'][$user['uid']] = array(
+                        "user_info"=> _get_user_get_basic_info($user['uid']),
+                        "response"=>htmlentities($topic['response'])
+                    );
+
+                    if(!isset($issue_topic_data_by_question[$topic['name']]['users'])){
+                        $issue_topic_data_by_question[$topic['name']]['users'] = array();
+                    }
+                    $issue_topic_data_by_question[$topic['name']]['users'][$user['uid']] = $user['uid'];
+                }
+            }
+
+        }
+    }
+
+    function sort_topic_data($a, $b){
+
+        if(count($a['users']) == count($b['users'])){
+            return 0;
+        }
+
+        return (count($a['users']) < count($b['users']))? 1 : -1;
+    }
+
+    uasort($issue_topic_data_by_question, "sort_topic_data");
+
+    return $issue_topic_data_by_question;
 }
