@@ -455,7 +455,7 @@ function _add_item_to_agenda($agenda_nid, $item_nid, $order = false)
                 $agenda_node->field_agenda_item['und'] = array();
             }
 
-            if ($order) {
+            if ($order !== false) {
                 array_splice($agenda_node->field_agenda_item['und'], (int)$order, 0, array(array('nid' => $item_nid)));
             } else {
                 $agenda_node->field_agenda_item['und'][] = array('nid' => $item_nid);
