@@ -14,7 +14,7 @@
 		}
 
 		$('.sortable').sortable({
-			connectWith: ".connected-sortable",
+			connectWith: ".connected-sortable"
 		}).on('sort', sortHandler);
 
 		function sortHandler(event, ui){
@@ -217,6 +217,7 @@
 			var agenda_date = item.parent('.list-group').data('date');
 			var clone = item.data('clone');
 			var current_index = item.data('index');
+            console.log("current_index : ", current_index);
 			var new_index = item.index();
 
 			var obj = {
@@ -249,6 +250,11 @@
 				}else{
 					elm.data('agenda-nid', false);
 				}
+
+                //loop through each item and update there index stored in the element data
+                $('.agenda-list-item').each(function(){
+                    $(this).data('index', $(this).index());
+                });
 			}
 
 			item.data('ajax-obj', obj);

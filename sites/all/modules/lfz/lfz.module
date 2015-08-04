@@ -359,11 +359,33 @@ function lfz_theme($existing, $type, $theme, $path)
         'variables' => array("media_alignment" => "media-left", "media_html" => "", "heading" => "", "content" => ""),
     );
 
-    $theme['skill_assessment_topic_overview'] = array(
-        'path' => drupal_get_path('module', 'lfz') . '/templates',
-        'template' => 'skill-assessment-topic-overview',
-        'variables' => array("data" => array()),
-    );
+    /*
+     * Skill Assessment Overview Templates
+     */
+        $theme['skill_assessment_overview'] = array(
+            'path' => drupal_get_path('module', 'lfz') . '/templates',
+            'template' => 'skill-assessment-overview',
+            'variables' => array("data" => array()),
+        );
+
+        $theme['skill_assessment_topic_issues_list'] = array(
+            'path' => drupal_get_path('module', 'lfz') . '/templates',
+            'template' => 'skill-assessment-overview',
+            'variables' => array("data" => array()),
+        );
+        $theme['skill_assessment_topic_issues_list_question'] = array(
+            'path' => drupal_get_path('module', 'lfz') . '/templates',
+            'template' => 'skill-assessment-topic-issues-list-question',
+            'variables' => array("data" => array()),
+        );
+        $theme['skill_assessment_topic_issues_list_user'] = array(
+            'path' => drupal_get_path('module', 'lfz') . '/templates',
+            'template' => 'skill-assessment-topic-issues-list-user',
+            'variables' => array("data" => array()),
+        );
+    /*
+     * Skill Assessment Overview Templates END
+     */
 
     return $theme;
 }
@@ -385,6 +407,9 @@ function _remove_agenda_item_from_agenda($agenda_nid, $item_nid, $index = false)
                     unset($agenda_node->field_agenda_item['und'][$index]);
                 } else {
                     $r = false;
+                    echo '<pre>';
+                    print_r("item not in the correct index");
+                    echo '</pre>';
                 }
             } else {
                 //remove all references in this agenda
@@ -399,10 +424,17 @@ function _remove_agenda_item_from_agenda($agenda_nid, $item_nid, $index = false)
                 node_save($agenda_node);
             } catch (Exception $e) {
                 $r = false;
+                
+                echo '<pre>';
+                print_r("unable to save node");
+                echo '</pre>';
             }
         }
     } else {
         $r = false;
+        echo '<pre>';
+        print_r("aprently there isnt enough info to remove an item");
+        echo '</pre>';
     }
 
     return $r;
@@ -423,7 +455,7 @@ function _add_item_to_agenda($agenda_nid, $item_nid, $order = false)
                 $agenda_node->field_agenda_item['und'] = array();
             }
 
-            if ($order) {
+            if ($order !== false) {
                 array_splice($agenda_node->field_agenda_item['und'], (int)$order, 0, array(array('nid' => $item_nid)));
             } else {
                 $agenda_node->field_agenda_item['und'][] = array('nid' => $item_nid);
