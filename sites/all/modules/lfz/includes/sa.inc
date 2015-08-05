@@ -542,6 +542,10 @@ function _get_overview_issue_topic_data_by_question($data)
                     continue;
                 }
 
+                $question_clean = htmlentities($question_data['question']);
+                $answer_clean = htmlentities($question_data['answer']);
+                $response_clean = htmlentities($question_data['response']);
+
                 if(!isset($issue_topic_data_by_question[$question_data['topic']])){
                     $issue_topic_data_by_question[$question_data['topic']] = array(
                         'total_questions'=>0,
@@ -555,21 +559,25 @@ function _get_overview_issue_topic_data_by_question($data)
                     $issue_topic_data_by_question[$question_data['topic']]['total_correct'] += 1;
                 }
 
-                $question_key = $d['nid'].$question_data['question'];
+                $issue_topic_data_by_question[$question_data['topic']]['percent'] = round($issue_topic_data_by_question[$question_data['topic']]['total_correct']/$issue_topic_data_by_question[$question_data['topic']]['total_questions']*100);
+
+                $question_key = $d['nid'].$question_clean;
 
                 if(!isset($issue_topic_data_by_question[$question_data['topic']]['questions'][$question_key])){
                     $issue_topic_data_by_question[$question_data['topic']]['questions'][$question_key] = array(
                         'sa_link'=>_get_sa_link_by_result_nid($d['nid']),
-                        'question'=>$question_data['question'],
-                        'answer'=>$question_data['answer'],
+                        'question'=>$question_clean,
+                        'answer'=>$answer_clean,
                         'user_responses'=>array()
                     );
                 }
 
-                $issue_topic_data_by_question[$question_data['topic']]['questions'][$question_key]['user_responses'][$user['uid']] = array(
-                    'user_info'=>_get_user_get_basic_info($user['uid']),
-                    'response'=>$question_data['response']
-                );
+                if(!$question_data['correct']){
+                    $issue_topic_data_by_question[$question_data['topic']]['questions'][$question_key]['user_responses'][$user['uid']] = array(
+                        'user_info'=>_get_user_get_basic_info($user['uid']),
+                        'response'=>$response_clean
+                    );
+                }
 
             }
 
@@ -583,15 +591,12 @@ function _get_overview_issue_topic_data_by_question($data)
 
 function sort_user_data_by_topic_correct_percentage($a, $b)
 {
-    $a_total_correct = $a['total_correct'];
+
     $a_total_questions = $a['total_questions'];
-    $a_percent = $a_total_correct/$a_total_questions;
 
-    $b_total_correct = $b['total_correct'];
     $b_total_questions = $b['total_questions'];
-    $b_percent = $b_total_correct/$b_total_questions;
 
-    if ($a_percent == $b_percent) {
+    if ($a['percent'] == $b['percent']) {
         if($a_total_questions < $b_total_questions){
             return 1;
         }else if($a_total_questions > $b_total_questions){
@@ -601,7 +606,7 @@ function sort_user_data_by_topic_correct_percentage($a, $b)
         }
     }
 
-    return ($a_percent < $b_percent) ? -1 : 1;
+    return ($a['percent'] < $b['percent']) ? -1 : 1;
 }
 
 function _get_overview_issue_topic_data_by_user($data)
@@ -623,14 +628,16 @@ function _get_overview_issue_topic_data_by_user($data)
                     'user_info' => _get_user_get_basic_info($uid),
                     'topics' => array()
                 );
+
+                $topics_array = array();
             }
 
             foreach($user['questions'] as $question){
 
-                //check if thise topic has been created for the current user
+                //check if this topic has been created for the current user
                 // if not then create the data structure
-                if(!isset($issue_topic_data_by_user[$uid]['topics'][$question['topic']])){
-                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']] = array(
+                if(!isset($topics_array[$question['topic']])){
+                    $topics_array[$question['topic']] = array(
                         'title'=>$question['topic'],
                         'total_questions'=>0,
                         'total_correct'=>0,
@@ -638,8 +645,8 @@ function _get_overview_issue_topic_data_by_user($data)
                     );
                 }
 
-                if(!isset($issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']])){
-                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']] = array(
+                if(!isset($topics_array[$question['topic']]['skill_assessments'][$d['nid']])){
+                    $topics_array[$question['topic']]['skill_assessments'][$d['nid']] = array(
                         'nid'=>$d['nid'],
                         'total_questions'=>0,
                         'total_correct'=>0,
@@ -647,23 +654,24 @@ function _get_overview_issue_topic_data_by_user($data)
                     );
                 }
 
-                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_questions'] += 1;
-                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['total_questions'] += 1;
+                $topics_array[$question['topic']]['total_questions'] += 1;
+                $topics_array[$question['topic']]['skill_assessments'][$d['nid']]['total_questions'] += 1;
                 if($question['correct']){
-                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_correct'] += 1;
-                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['total_correct'] += 1;
+                    $topics_array[$question['topic']]['total_correct'] += 1;
+                    $topics_array[$question['topic']]['skill_assessments'][$d['nid']]['total_correct'] += 1;
                 }
 
-                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['questions'][] = $question;
+                $topics_array[$question['topic']]['percent'] = round($topics_array[$question['topic']]['total_correct']/$topics_array[$question['topic']]['total_questions']*100);
+
+                $topics_array[$question['topic']]['skill_assessments'][$d['nid']]['questions'][] = $question;
 
             }
 
+            uasort($topics_array, "sort_user_data_by_topic_correct_percentage");
 
+            $issue_topic_data_by_user[$uid]['topics'] = $topics_array;
         }
 
-
-
-        uasort($issue_topic_data_by_user[$uid]['topics'], "sort_user_data_by_topic_correct_percentage");
     }
 
 

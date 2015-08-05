@@ -25,10 +25,9 @@
                         <?php
                         foreach ($user_topic_data['topics'] as $topic):
                             $label = 'default';
-                            $percent = round($topic['total_correct'] / $topic['total_questions'] * 100);
-                            if ($percent < 50) {
+                            if ($topic['percent']  < 50) {
                                 $label = 'danger';
-                            } else if ($percent < 80) {
+                            } else if ($topic['percent'] < 80) {
                                 $label = 'warning';
                             } else {
                                 $label = 'success';
@@ -37,7 +36,7 @@
                             ?>
                             <div class="list-group-item list-group-item-<?php print $label;?>">
                                 <?php print $topic['title']; ?>
-                                <span class="label label-<?php print $label; ?>"><?php print $percent. '% - '.$topic['total_correct']." out of ".$topic['total_questions'] ;?></span>
+                                <span class="label label-<?php print $label; ?>"><?php print $topic['percent']. '% - '.$topic['total_correct']." out of ".$topic['total_questions'] ;?></span>
                             </div>
                         <?php endforeach; ?>
                     </div>
