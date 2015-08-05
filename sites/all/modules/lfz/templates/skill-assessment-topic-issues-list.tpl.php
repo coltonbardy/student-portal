@@ -5,10 +5,10 @@
         <!-- Nav tabs -->
         <ul class="nav nav-tabs" role="tablist">
             <li role="presentation" class="active">
-                <a href="#question" aria-controls="home" role="tab" data-toggle="tab">All Users</a>
+                <a href="#question" aria-controls="home" role="tab" data-toggle="tab">All Students</a>
             </li>
             <li role="presentation">
-                <a href="#user" aria-controls="profile" role="tab" data-toggle="tab">By User</a>
+                <a href="#user" aria-controls="profile" role="tab" data-toggle="tab">By Student</a>
             </li>
         </ul>
 
