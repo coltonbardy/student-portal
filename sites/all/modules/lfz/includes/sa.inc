@@ -414,7 +414,7 @@ function _evaluate_user_response($answer, $response, $options = array())
     return $r;
 }
 
-function _get_assessment_data($nid = false)
+function _get_assessment_data($assessment_nid = false)
 {
 
     global $user;
@@ -423,11 +423,11 @@ function _get_assessment_data($nid = false)
     $r = array();
 
     //get all assessment data
-    if (!$nid) {
+    if (!$assessment_nid) {
 
         $sql = "";
         //get all assessment results for instructors
-        if (user_has_role(array_search('instructor', user_roles()))) {
+        if (user_access("manage skill assessments")) {
             $sql = 'SELECT nid, title, changed FROM {node} WHERE type=:type ORDER BY changed DESC';
         } else if (user_has_role(array_search('student', user_roles()))) {
             //get results for specific students roles
@@ -456,7 +456,7 @@ function _get_assessment_data($nid = false)
         }
 
     } else {
-        $r[] = _load_node_basic($nid);
+        $r[] = _load_node_basic($assessment_nid);
     }
 
     return $r;
