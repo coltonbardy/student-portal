@@ -407,8 +407,8 @@ function todays_agenda_callback($class_nid = false, $date = false)
     $return = drupal_get_form('lfz_agenda_form', $todays_agenda->nid, $class->nid);
 
     //include js file
-    drupal_add_js(drupal_get_path('module', 'lfz') . "/misc/todays-agenda.js");
     drupal_add_js(drupal_get_path('module', 'lfz') . "/misc/agenda.js");
+    drupal_add_js(drupal_get_path('module', 'lfz') . "/misc/todays-agenda.js");
 
     return $return;
 }
@@ -522,15 +522,20 @@ function skill_assessment_overview_callback($class_nid=false)
 
         return _agenda_select_class($redirect_url);
     }
-    drupal_set_title("Assessment Overview");
+
+    $class_node = node_load($class_nid);
+
+    drupal_set_title($class_node->title." Assessment Overview");
 
     $data = _get_assessment_data();
 
     $template_data = array();
 
     $template_data['topic_by_question'] = _get_overview_issue_topic_data_by_question($data);
+    $template_data['topic_by_user'] = _get_overview_issue_topic_data_by_user($data);
 
-    $r = theme('skill_assessment_overview', array('data'=>$template_data));
+//    $r = theme('skill_assessment_overview', array('data'=>$template_data));
+    $r = theme('skill_assessment_topic_issues_list', array('data'=>$template_data));
 
     return $r;
 }

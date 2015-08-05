@@ -2,46 +2,45 @@
     <?php
     $i = 0;
 
-    phpinfo();
-
-    foreach ($data as $key => $sa_question):
+    foreach ($data as $topic => $topic_data):
         $id = 'topic' . $i;
-        $user_count = count($sa_question['users']);
-        $label = 'default';
-        if ($user_count > 4) {
-            $label = 'danger';
-        } else if ($user_count > 1) {
-            $label = 'warning';
+
+        $percentage = round($topic_data['total_correct']/$topic_data['total_questions']*100);
+        $label_class = 'default';
+        if ($percentage < 40) {
+            $label_class = 'danger';
+        } else if ($percentage < 80) {
+            $label_class = 'warning';
         } else {
-            $label = 'success';
+            $label_class = 'success';
         }
+        $topic_label = $percentage."% ".$topic_data['total_correct'].' out of '.$topic_data['total_questions'];
         ?>
-        <div class="topic-list panel-group" id="accordion">
-            <div class="panel panel-<?php print $label;?>">
+        <div class="topic-list panel-group" id="topic-accordion">
+            <div class="panel panel-<?php print $label_class;?>">
                 <div class="panel-heading">
-                    <a data-toggle="collapse" data-parent="#accordion"
-                       href="#<?php print $id; ?>"> <?php print $key; ?>
-                        <span class="label label-<?php print $label;?>"># of issues
-                        : <?php print count($sa_question['users']);?></span></a>
+                    <a data-toggle="collapse" data-parent="#topic-accordion"
+                       href="#<?php print $id; ?>"> <?php print $topic; ?>
+                        <span class="label label-<?php print $label_class;?>"><?php print $topic_label;?></span></a>
                 </div>
 
-                <div class="questions panel-body panel-collapse collapse" id="<?php print $id; ?>">
-                    <?php foreach ($sa_question['questions'] as $q): ?>
+                <div class="topic-questions panel-body panel-collapse collapse" id="<?php print $id; ?>">
+                    <?php foreach ($topic_data['questions'] as $q): ?>
                         <div class="question-list">
                             <h4><span
                                     class="glyphicon glyphicon-question-sign"></span> <?php print ucfirst($q['question']); ?>
-                                - <?php print l('View Test', $q['sa_links']['student'], array('attributes' => array('target' => '_blank', 'class' => 'btn btn-info btn-xs'))); ?>
+                                - <?php print l('View Test', $q['sa_link']['student'], array('attributes' => array('target' => '_blank', 'class' => 'btn btn-info btn-xs'))); ?>
                             </h4>
                             <h5>Correct Answers -
-                                <small><?php print $q['correct_answer']; ?></small>
+                                <small><?php print $q['answer']; ?></small>
                             </h5>
                             <h5>User(s) Answers</h5>
 
                             <div class="user-list well">
                                 <?php
-                                foreach ($q['user_answers'] as $user_answer): ?>
-                                    <h4><?php print $user_answer['user_info']['name']; ?> :
-                                        <small><?php print $user_answer['response']; ?></small>
+                                foreach ($q['user_responses'] as $user_response): ?>
+                                    <h4><?php print $user_response['user_info']['name']; ?> :
+                                        <small><?php print $user_response['response']; ?></small>
                                     </h4>
                                 <?php endforeach; ?>
                             </div>

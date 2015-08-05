@@ -20,7 +20,13 @@
                     <?php
                     $i = 0;
 
+                    echo '<pre>';
+                    print_r(array_keys($data));
+                    echo '</pre>';
+
                     foreach ($data as $key => $sa_question):
+
+
                         $id = 'topic' . $i;
                         $user_count = count($sa_question['users']);
                         $label = 'default';
