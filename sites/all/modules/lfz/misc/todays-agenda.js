@@ -177,7 +177,7 @@
 	});
 	
 	//remove agenda item click handler
-	$('body').on('click', '.remove-agenda-item', removeAgendaItem);
+	$('body').one('click', '.remove-agenda-item', removeAgendaItem);
 
 	/**
     *	Click Handlers End
@@ -292,20 +292,20 @@
 
     function removeAgendaItem(event){
 
-		var listItem = $(this).parent('.agenda-list-item');
+		var listItem = $(this).parents('.agenda-list-item');
 
 		(function(elm){
-			var item_nid = listItem.data('nid');
+			var item_nid = elm.data('nid');
 			if(!item_nid){
 	    		console.error('Cant remove agenda item with no data-nid');
 	    		return;
 	    	}
-    		var index = listItem.index();
-    		var agenda_nid = listItem.parent('.list-group').data('agenda-nid');
+    		var index = elm.index();
+    		var agenda_nid = elm.parent('.list-group').data('agenda-nid');
     		var date = null;
     		if(lfz && lfz.date_search_format){
 				date = lfz.date_search_format;
-			}    		
+			}
 
     		var url = base_path+'ajax/remove-agenda-item';
 

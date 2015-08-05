@@ -407,8 +407,8 @@ function todays_agenda_callback($class_nid = false, $date = false)
     $return = drupal_get_form('lfz_agenda_form', $todays_agenda->nid, $class->nid);
 
     //include js file
-    drupal_add_js(drupal_get_path('module', 'lfz') . "/misc/todays-agenda.js");
     drupal_add_js(drupal_get_path('module', 'lfz') . "/misc/agenda.js");
+    drupal_add_js(drupal_get_path('module', 'lfz') . "/misc/todays-agenda.js");
 
     return $return;
 }

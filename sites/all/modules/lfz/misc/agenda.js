@@ -82,7 +82,7 @@
 		});
 
 		//remove agenda item click handler
-		$('body').on('click', '.remove-agenda-item', removeAgendaItem);
+		$('body').one('click', '.remove-agenda-item', removeAgendaItem);
 
         //add skill assessment results button handler
         $('body').on('click', '.add-sa-results', function(){
@@ -159,7 +159,7 @@
 
 		function removeAgendaItem(event){
 
-			var listItem = $(this).parent('.agenda-list-item');
+			var listItem = $(this).parents('.agenda-list-item');
 
 			(function(elm){
 				var item_nid = listItem.data('nid');
