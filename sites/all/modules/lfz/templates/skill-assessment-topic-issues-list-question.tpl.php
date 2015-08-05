@@ -5,16 +5,15 @@
     foreach ($data as $topic => $topic_data):
         $id = 'topic' . $i;
 
-        $percentage = round($topic_data['total_correct']/$topic_data['total_questions']*100);
         $label_class = 'default';
-        if ($percentage < 40) {
+        if ($topic_data['percent'] < 50) {
             $label_class = 'danger';
-        } else if ($percentage < 80) {
+        } else if ($topic_data['percent']  < 80) {
             $label_class = 'warning';
         } else {
             $label_class = 'success';
         }
-        $topic_label = $percentage."% ".$topic_data['total_correct'].' out of '.$topic_data['total_questions'];
+        $topic_label = $topic_data['percent']."% ".$topic_data['total_correct'].' out of '.$topic_data['total_questions'];
         ?>
         <div class="topic-list panel-group" id="topic-accordion">
             <div class="panel panel-<?php print $label_class;?>">
@@ -34,7 +33,7 @@
                             <h5>Correct Answers -
                                 <small><?php print $q['answer']; ?></small>
                             </h5>
-                            <h5>User(s) Answers</h5>
+                            <h5>Incorrect User(s) Answers</h5>
 
                             <div class="user-list well">
                                 <?php
