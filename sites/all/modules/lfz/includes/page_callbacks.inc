@@ -522,7 +522,10 @@ function skill_assessment_overview_callback($class_nid=false)
 
         return _agenda_select_class($redirect_url);
     }
-    drupal_set_title("Assessment Overview");
+
+    $class_node = node_load($class_nid);
+
+    drupal_set_title($class_node->title." Assessment Overview");
 
     $data = _get_assessment_data();
 

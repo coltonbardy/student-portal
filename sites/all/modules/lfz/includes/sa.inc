@@ -535,59 +535,73 @@ function _get_overview_issue_topic_data_by_question($data)
         $users = $sa_results['formatted']['user'];
 
         foreach ($users as $user) {
-            $topics = $user['data']['suggested_improvement']['topics'];
-            foreach ($topics as $topic) {
-                if (!isset($issue_topic_data_by_question[$topic['name']])) {
-                    $issue_topic_data[$topic['name']] = array(
-                        'questions' => array(),
+
+            foreach($user['questions'] as $question_data){
+
+                if(trim($question_data['topic']) == ""){
+                    continue;
+                }
+
+                if(!isset($issue_topic_data_by_question[$question_data['topic']])){
+                    $issue_topic_data_by_question[$question_data['topic']] = array(
+                        'total_questions'=>0,
+                        'total_correct'=>0,
+                        'questions'=>array()
                     );
                 }
 
-                $result_nid = $d['nid'];
+                $issue_topic_data_by_question[$question_data['topic']]['total_questions'] += 1;
+                if($question_data['correct']){
+                    $issue_topic_data_by_question[$question_data['topic']]['total_correct'] += 1;
+                }
 
-                $links = _get_sa_link_by_result_nid($result_nid);
+                $question_key = $d['nid'].$question_data['question'];
 
-                $key = $result_nid . '-' . htmlentities($topic['question']);
-
-                if (!isset($issue_topic_data_by_question[$topic['name']]['questions'][$key])) {
-                    $issue_topic_data_by_question[$topic['name']]['questions'][$key] = array(
-                        'results_nid' => $result_nid,
-                        'sa_links' => $links,
-                        'question' => htmlentities($topic['question']),
-                        'user_answers' => array(),
-                        'correct_answer' => htmlentities($topic['answer'])
+                if(!isset($issue_topic_data_by_question[$question_data['topic']]['questions'][$question_key])){
+                    $issue_topic_data_by_question[$question_data['topic']]['questions'][$question_key] = array(
+                        'sa_link'=>_get_sa_link_by_result_nid($d['nid']),
+                        'question'=>$question_data['question'],
+                        'answer'=>$question_data['answer'],
+                        'user_responses'=>array()
                     );
                 }
 
-
-                $issue_topic_data_by_question[$topic['name']]['questions'][$key]['user_answers'][$user['uid']] = array(
-                    "user_info" => _get_user_get_basic_info($user['uid']),
-                    "response" => htmlentities($topic['response'])
+                $issue_topic_data_by_question[$question_data['topic']]['questions'][$question_key]['user_responses'][$user['uid']] = array(
+                    'user_info'=>_get_user_get_basic_info($user['uid']),
+                    'response'=>$question_data['response']
                 );
 
-                // keep track of user ids who had issues with this topic
-                if (!isset($issue_topic_data_by_question[$topic['name']]['users'])) {
-                    $issue_topic_data_by_question[$topic['name']]['users'] = array();
-                }
-                $issue_topic_data_by_question[$topic['name']]['users'][$user['uid']] = $user['uid'];
             }
 
         }
     }
 
-    function sort_topic_data($a, $b)
-    {
-
-        if (count($a['users']) == count($b['users'])) {
-            return 0;
-        }
-
-        return (count($a['users']) < count($b['users'])) ? 1 : -1;
-    }
-
-    uasort($issue_topic_data_by_question, "sort_topic_data");
+    uasort($issue_topic_data_by_question, "sort_user_data_by_topic_correct_percentage");
 
     return $issue_topic_data_by_question;
+}
+
+function sort_user_data_by_topic_correct_percentage($a, $b)
+{
+    $a_total_correct = $a['total_correct'];
+    $a_total_questions = $a['total_questions'];
+    $a_percent = $a_total_correct/$a_total_questions;
+
+    $b_total_correct = $b['total_correct'];
+    $b_total_questions = $b['total_questions'];
+    $b_percent = $b_total_correct/$b_total_questions;
+
+    if ($a_percent == $b_percent) {
+        if($a_total_questions < $b_total_questions){
+            return 1;
+        }else if($a_total_questions > $b_total_questions){
+            return -1;
+        }else{
+            return 0;
+        }
+    }
+
+    return ($a_percent < $b_percent) ? -1 : 1;
 }
 
 function _get_overview_issue_topic_data_by_user($data)
@@ -646,7 +660,13 @@ function _get_overview_issue_topic_data_by_user($data)
 
 
         }
+
+
+
+        uasort($issue_topic_data_by_user[$uid]['topics'], "sort_user_data_by_topic_correct_percentage");
     }
+
+
 
     return $issue_topic_data_by_user;
 }
