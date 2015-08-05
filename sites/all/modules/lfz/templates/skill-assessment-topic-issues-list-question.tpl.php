@@ -2,8 +2,6 @@
     <?php
     $i = 0;
 
-    phpinfo();
-
     foreach ($data as $key => $sa_question):
         $id = 'topic' . $i;
         $user_count = count($sa_question['users']);

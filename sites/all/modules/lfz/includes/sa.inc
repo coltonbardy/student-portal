@@ -149,7 +149,7 @@ function _parse_questions($data, $meta_data, &$errors)
         $i++;
     }
 
-    if(!$reached_first_question){
+    if (!$reached_first_question) {
         $errors[] = "First question meta data doesn't match questions asked";
     }
 
@@ -255,6 +255,8 @@ function _parse_user_responses($data, &$errors)
                 );
                 $temp_response['details'] = _evaluate_user_response($q['answer'], $response[$q['question']], $options);
                 $temp_response['answer'] = $q['answer'];
+                $temp_response['topic'] = $q['associated_topic'];
+                $temp_response['skill'] = $q['associated_skill'];
                 $temp_response['correct'] = ($temp_response['details']['total_possible'] === $temp_response['details']['total_correct']) ? true : false;
 
                 $temp_user_arr['questions'][] = $temp_response;
@@ -275,10 +277,10 @@ function _parse_user_responses($data, &$errors)
                         && array_search($topic, $temp_user_arr['data']['suggested_improvement']['topics']) === false
                     ) {
                         $temp_user_arr['data']['suggested_improvement']['topics'][] = array(
-                            'name'=>$topic,
-                            'question'=>$q['question'],
-                            'response'=>$response[$q['question']],
-                            'answer'=>$q['answer']
+                            'name' => $topic,
+                            'question' => $q['question'],
+                            'response' => $response[$q['question']],
+                            'answer' => $q['answer']
                         );
                     }
 
@@ -287,10 +289,10 @@ function _parse_user_responses($data, &$errors)
                         && array_search($skill, $temp_user_arr['data']['suggested_improvement']['skills']) === false
                     ) {
                         $temp_user_arr['data']['suggested_improvement']['skills'][] = array(
-                            'name'=>$skill,
-                            'question'=>$q['question'],
-                            'response'=>$response[$q['question']],
-                            'answer'=>$q['answer']
+                            'name' => $skill,
+                            'question' => $q['question'],
+                            'response' => $response[$q['question']],
+                            'answer' => $q['answer']
                         );
                     }
                 }
@@ -351,6 +353,10 @@ function _evaluate_user_response($answer, $response, $options = array())
             } else if ($answer === $response) {
                 $r['total_correct'] = 1;
                 $r['total_answered'] = 1;
+                $r['correct_details'][] = array(
+                    'type' => ANSWER_TYPE_UNKNOWN,
+                    'response' => $response
+                );
             } else {
                 $r['incorrect_details'][] = array(
                     'type' => ANSWER_TYPE_BAD,
@@ -408,7 +414,8 @@ function _evaluate_user_response($answer, $response, $options = array())
     return $r;
 }
 
-function _get_assessment_data($nid=false){
+function _get_assessment_data($nid = false)
+{
 
     global $user;
 
@@ -416,13 +423,13 @@ function _get_assessment_data($nid=false){
     $r = array();
 
     //get all assessment data
-    if(!$nid){
+    if (!$nid) {
 
         $sql = "";
         //get all assessment results for instructors
         if (user_has_role(array_search('instructor', user_roles()))) {
             $sql = 'SELECT nid, title, changed FROM {node} WHERE type=:type ORDER BY changed DESC';
-        }else if(user_has_role(array_search('student', user_roles()))){
+        } else if (user_has_role(array_search('student', user_roles()))) {
             //get results for specific students roles
             $sql = "SELECT node.title AS title, node.nid AS nid, node.changed AS changed, 'node' AS field_data_field_class_reference_node_entity_type
                 FROM
@@ -440,28 +447,29 @@ function _get_assessment_data($nid=false){
 
         $values[':type'] = 'skill_assessment_results';
 
-        if(strlen($sql) > 0){
+        if (strlen($sql) > 0) {
             $query = db_query($sql, $values);
 
-            while($result = $query->fetchAssoc()){
+            while ($result = $query->fetchAssoc()) {
                 $r[] = $result;
             }
         }
 
-    }else{
+    } else {
         $r[] = _load_node_basic($nid);
     }
 
     return $r;
 }
 
-function _get_results_data($nid){
+function _get_results_data($nid)
+{
     //create an error array to be passed along as reference for any errors that could happen
     $errors = array();
     $r = array(
-        'nid'=>$nid,
-        'errors'=>array(),
-        'formatted'=>array()
+        'nid' => $nid,
+        'errors' => array(),
+        'formatted' => array()
     );
 
 
@@ -474,11 +482,11 @@ function _get_results_data($nid){
     $csv_data = $node->body['und'][0]['value'];
 
     //create temp file for Reader class to load and process
-    $temp_csv_file = DRUPAL_ROOT . '/' . drupal_get_path('module', 'lfz').'/tmp/sa/'.$nid.'-results.csv';
+    $temp_csv_file = DRUPAL_ROOT . '/' . drupal_get_path('module', 'lfz') . '/tmp/sa/' . $nid . '-results.csv';
 
     //put csv into a temp file for reading with library
-    if(!file_put_contents($temp_csv_file, $csv_data)){
-        $r['errors'][] = "Unable to write temp csv file to read from : ".$temp_csv_file;
+    if (!file_put_contents($temp_csv_file, $csv_data)) {
+        $r['errors'][] = "Unable to write temp csv file to read from : " . $temp_csv_file;
     }
 
     //load temp csv file
@@ -494,14 +502,14 @@ function _get_results_data($nid){
     $r['formatted']['row_type'] = $row_type_data;
 
     $meta_data = _parse_meta_data($row_type_data['meta_data']);
-    if(!$meta_data){
+    if (!$meta_data) {
         $r['errors'][] = "Meta Data wasn't able to be parsed";
     }
 
     $r['formatted']['meta_data'] = $meta_data;
 
-    $responses =  _parse_response($lib_data, $meta_data);
-    if(!$responses){
+    $responses = _parse_response($lib_data, $meta_data);
+    if (!$responses) {
         $r['errors'][] = "No responses could be parsed from the data received";
     }
 
@@ -516,70 +524,129 @@ function _get_results_data($nid){
     return $r;
 }
 
-function _get_overview_issue_topic_data_by_question($data){
+function _get_overview_issue_topic_data_by_question($data)
+{
 
     $issue_topic_data_by_question = array();
 
     foreach ($data as $d) {
         $sa_results = _get_results_data($d['nid']);
 
-        foreach ($sa_results as $sa) {
-            if(!isset($sa['user'])){
-                continue;
-            }
-            $users = $sa['user'];
+        $users = $sa_results['formatted']['user'];
 
-            foreach ($users as $user) {
-                $topics = $user['data']['suggested_improvement']['topics'];
-                foreach ($topics as $topic) {
-                    if (!isset($issue_topic_data_by_question[$topic['name']])) {
-                        $issue_topic_data[$topic['name']] = array(
-                            'questions'=>array(),
-                        );
-                    }
-
-                    $result_nid = $d['nid'];
-
-                    $links = _get_sa_link_by_result_nid($result_nid);
-
-                    $key = $result_nid . '-' . htmlentities($topic['question']);
-
-                    if(!isset($issue_topic_data_by_question[$topic['name']]['questions'][$key])){
-                        $issue_topic_data_by_question[$topic['name']]['questions'][$key] = array(
-                            'results_nid'=>$result_nid,
-                            'sa_links'=>$links,
-                            'question' => htmlentities($topic['question']),
-                            'user_answers' => array(),
-                            'correct_answer'=>htmlentities($topic['answer'])
-                        );
-                    }
-
-
-                    $issue_topic_data_by_question[$topic['name']]['questions'][$key]['user_answers'][$user['uid']] = array(
-                        "user_info"=> _get_user_get_basic_info($user['uid']),
-                        "response"=>htmlentities($topic['response'])
+        foreach ($users as $user) {
+            $topics = $user['data']['suggested_improvement']['topics'];
+            foreach ($topics as $topic) {
+                if (!isset($issue_topic_data_by_question[$topic['name']])) {
+                    $issue_topic_data[$topic['name']] = array(
+                        'questions' => array(),
                     );
-
-                    if(!isset($issue_topic_data_by_question[$topic['name']]['users'])){
-                        $issue_topic_data_by_question[$topic['name']]['users'] = array();
-                    }
-                    $issue_topic_data_by_question[$topic['name']]['users'][$user['uid']] = $user['uid'];
                 }
+
+                $result_nid = $d['nid'];
+
+                $links = _get_sa_link_by_result_nid($result_nid);
+
+                $key = $result_nid . '-' . htmlentities($topic['question']);
+
+                if (!isset($issue_topic_data_by_question[$topic['name']]['questions'][$key])) {
+                    $issue_topic_data_by_question[$topic['name']]['questions'][$key] = array(
+                        'results_nid' => $result_nid,
+                        'sa_links' => $links,
+                        'question' => htmlentities($topic['question']),
+                        'user_answers' => array(),
+                        'correct_answer' => htmlentities($topic['answer'])
+                    );
+                }
+
+
+                $issue_topic_data_by_question[$topic['name']]['questions'][$key]['user_answers'][$user['uid']] = array(
+                    "user_info" => _get_user_get_basic_info($user['uid']),
+                    "response" => htmlentities($topic['response'])
+                );
+
+                // keep track of user ids who had issues with this topic
+                if (!isset($issue_topic_data_by_question[$topic['name']]['users'])) {
+                    $issue_topic_data_by_question[$topic['name']]['users'] = array();
+                }
+                $issue_topic_data_by_question[$topic['name']]['users'][$user['uid']] = $user['uid'];
             }
 
         }
     }
 
-    function sort_topic_data($a, $b){
+    function sort_topic_data($a, $b)
+    {
 
-        if(count($a['users']) == count($b['users'])){
+        if (count($a['users']) == count($b['users'])) {
             return 0;
         }
 
-        return (count($a['users']) < count($b['users']))? 1 : -1;
+        return (count($a['users']) < count($b['users'])) ? 1 : -1;
     }
 
     uasort($issue_topic_data_by_question, "sort_topic_data");
 
     return $issue_topic_data_by_question;
+}
+
+function _get_overview_issue_topic_data_by_user($data)
+{
+
+    $issue_topic_data_by_user = array();
+
+    foreach ($data as $d) {
+        $sa_results = _get_results_data($d['nid']);
+
+        $users = $sa_results['formatted']['user'];
+
+        foreach ($users as $user) {
+
+            $uid = $user['uid'];
+
+            if (!isset($issue_topic_data_by_user[$uid])) {
+                $issue_topic_data_by_user[$uid] = array(
+                    'user_info' => _get_user_get_basic_info($uid),
+                    'topics' => array()
+                );
+            }
+
+            foreach($user['questions'] as $question){
+
+                //check if thise topic has been created for the current user
+                // if not then create the data structure
+                if(!isset($issue_topic_data_by_user[$uid]['topics'][$question['topic']])){
+                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']] = array(
+                        'title'=>$question['topic'],
+                        'total_questions'=>0,
+                        'total_correct'=>0,
+                        'skill_assessments'=>array()
+                    );
+                }
+
+                if(!isset($issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']])){
+                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']] = array(
+                        'nid'=>$d['nid'],
+                        'total_questions'=>0,
+                        'total_correct'=>0,
+                        'questions'=>array()
+                    );
+                }
+
+                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_questions'] += 1;
+                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['total_questions'] += 1;
+                if($question['correct']){
+                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_correct'] += 1;
+                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['total_correct'] += 1;
+                }
+
+                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['questions'][] = $question;
+
+            }
+
+
+        }
+    }
+
+    return $issue_topic_data_by_user;
 }

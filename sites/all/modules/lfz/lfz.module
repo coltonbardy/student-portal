@@ -370,7 +370,7 @@ function lfz_theme($existing, $type, $theme, $path)
 
         $theme['skill_assessment_topic_issues_list'] = array(
             'path' => drupal_get_path('module', 'lfz') . '/templates',
-            'template' => 'skill-assessment-overview',
+            'template' => 'skill-assessment-topic-issues-list',
             'variables' => array("data" => array()),
         );
         $theme['skill_assessment_topic_issues_list_question'] = array(
@@ -1084,11 +1084,11 @@ function _get_user_get_basic_info($uid = false)
     $user = user_load($uid);
 
     if ($user) {
-        $r['email'] = $user->mail;
-        $r['username'] = $user->name;
+        $r['email'] = trim($user->mail);
+        $r['username'] = trim($user->name);
         $r['roles'] = $user->roles;
-        $first_name = (isset($user->field_first_name['und'])) ? $user->field_first_name['und'][0]['safe_value'] : '';
-        $last_name = (isset($user->field_last_name['und'])) ? $user->field_last_name['und'][0]['safe_value'] : '';
+        $first_name = (isset($user->field_first_name['und'])) ? trim($user->field_first_name['und'][0]['safe_value']) : '';
+        $last_name = (isset($user->field_last_name['und'])) ? trim($user->field_last_name['und'][0]['safe_value']) : '';
         $r['name'] = $first_name . ' ' . $last_name;
     }
 

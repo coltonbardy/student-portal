@@ -529,8 +529,10 @@ function skill_assessment_overview_callback($class_nid=false)
     $template_data = array();
 
     $template_data['topic_by_question'] = _get_overview_issue_topic_data_by_question($data);
+    $template_data['topic_by_user'] = _get_overview_issue_topic_data_by_user($data);
 
-    $r = theme('skill_assessment_overview', array('data'=>$template_data));
+//    $r = theme('skill_assessment_overview', array('data'=>$template_data));
+    $r = theme('skill_assessment_topic_issues_list', array('data'=>$template_data));
 
     return $r;
 }

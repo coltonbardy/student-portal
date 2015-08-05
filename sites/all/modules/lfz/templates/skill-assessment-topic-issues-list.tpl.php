@@ -19,7 +19,7 @@
                 <?php print theme('skill_assessment_topic_issues_list_question', array("data"=>$data['topic_by_question'])); ?>
             </div>
             <div role="tabpanel" class="tab-pane" id="user">
-                <?php print theme('skill_assessment_topic_issues_list_question', array("data"=>$data['topic_by_user'])); ?>
+                <?php print theme('skill_assessment_topic_issues_list_user', array("data"=>$data['topic_by_user'])); ?>
             </div>
         </div>
 
