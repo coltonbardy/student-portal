@@ -156,6 +156,15 @@ function lfz_menu()
 //        'type' => MENU_CALLBACK,
     );
 
+    $items['skillassessment/list/%class_nid'] = array(
+        'title' => 'Assessment Results',
+        'page callback' => 'skill_assessment_list_callback',
+        'page arguments' => array(2),
+        'access callback' => 'check_user_roles',
+        'access arguments' => array('instructor', 'student'),
+//        'type' => MENU_CALLBACK,
+    );
+
     $items['skillassessment/details/%'] = array(
         'page callback' => 'skill_assessment_details_callback',
         'page arguments' => array(2),
