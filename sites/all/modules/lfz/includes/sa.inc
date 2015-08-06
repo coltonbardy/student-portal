@@ -3,6 +3,7 @@
 define("ANSWER_TYPE_BAD", "Bad Response");
 define("ANSWER_TYPE_UNKNOWN", "User didn't know the answer");
 define("ANSWER_TYPE_MORE", "More Corect Answers Needed");
+define("ANSWER_TYPE_MORE_RESPONSES", "User checked more answers than were needed");
 
 function _parse_meta_data($meta_data_row)
 {
@@ -257,7 +258,9 @@ function _parse_user_responses($data, &$errors)
                 $temp_response['answer'] = $q['answer'];
                 $temp_response['topic'] = $q['associated_topic'];
                 $temp_response['skill'] = $q['associated_skill'];
-                $temp_response['correct'] = ($temp_response['details']['total_possible'] === $temp_response['details']['total_correct']) ? true : false;
+
+                $temp_response['correct'] = ($temp_response['details']['total_possible'] === $temp_response['details']['total_correct']
+                    && $temp_response['details']['total_answered'] === $temp_response['details']['total_possible']) ? true : false;
 
                 $temp_user_arr['questions'][] = $temp_response;
 
@@ -272,7 +275,7 @@ function _parse_user_responses($data, &$errors)
                     $topic = (isset($q['associated_topic'])) ? trim($q['associated_topic']) : "";
                     $skill = (isset($q['associated_skill'])) ? trim($q['associated_skill']) : "";
 
-                    //check that the topic is not empty and doesn't exist in the array
+
                     if ($topic != ""
                         && array_search($topic, $temp_user_arr['data']['suggested_improvement']['topics']) === false
                     ) {
@@ -367,6 +370,7 @@ function _evaluate_user_response($answer, $response, $options = array())
             break;
         case 'ms':
             $answer_arr = explode(",", $answer);
+
             //remove white space from multiple selects
             foreach ($answer_arr as $key => $answer) {
                 $answer_arr[$key] = trim($answer);
@@ -378,6 +382,11 @@ function _evaluate_user_response($answer, $response, $options = array())
             if (count($answer_arr) > count($response_arr)) {
                 $r['incorrect_details'][] = array(
                     "type" => ANSWER_TYPE_MORE,
+                    "response" => $response
+                );
+            }else if(count($answer_arr) < count($response_arr)){
+                $r['incorrect_details'][] = array(
+                    "type" => ANSWER_TYPE_MORE_RESPONSES,
                     "response" => $response
                 );
             }
@@ -395,7 +404,7 @@ function _evaluate_user_response($answer, $response, $options = array())
                         'type' => ANSWER_TYPE_UNKNOWN,
                         'response' => $response
                     );
-                    $r['unknown_answered'] = 1;
+                    $r['unknown_answered'] += 1;
                 } else if (array_search($response, $answer_arr) !== false) {
                     $r['total_correct'] += 1;
                     $r['total_answered'] += 1;
@@ -414,7 +423,7 @@ function _evaluate_user_response($answer, $response, $options = array())
     return $r;
 }
 
-function _get_assessment_data($assessment_nid = false)
+function _get_assessment_data($class_nid=false,$assessment_nid = false)
 {
 
     global $user;
@@ -428,19 +437,44 @@ function _get_assessment_data($assessment_nid = false)
         $sql = "";
         //get all assessment results for instructors
         if (user_access("manage skill assessments")) {
-            $sql = 'SELECT nid, title, changed FROM {node} WHERE type=:type ORDER BY changed DESC';
+            if($class_nid){
+                $sql = "SELECT nid, title, changed FROM {node}
+                        LEFT JOIN {field_data_field_class_reference} field_data_field_class_reference ON node.nid = field_data_field_class_reference.entity_id AND (field_data_field_class_reference.entity_type = 'node' AND field_data_field_class_reference.deleted = '0')
+                        WHERE type=:type
+                            AND (field_data_field_class_reference.field_class_reference_nid IN  (:class_nid))
+                        ORDER BY changed DESC";
+                $values[":class_nid"] = array($class_nid);
+            }else{
+                $sql = 'SELECT nid, title, changed FROM {node} WHERE type=:type ORDER BY changed DESC';
+            }
         } else if (user_has_role(array_search('student', user_roles()))) {
             //get results for specific students roles
-            $sql = "SELECT node.title AS title, node.nid AS nid, node.changed AS changed, 'node' AS field_data_field_class_reference_node_entity_type
-                FROM
-                {node} node
-                LEFT JOIN {field_data_field_class_reference} field_data_field_class_reference ON node.nid = field_data_field_class_reference.entity_id AND (field_data_field_class_reference.entity_type = 'node' AND field_data_field_class_reference.deleted = '0')
-                LEFT JOIN {node} node_field_data_field_class_reference ON field_data_field_class_reference.field_class_reference_nid = node_field_data_field_class_reference.nid
-                LEFT JOIN {field_data_field_access_roles} node_field_data_field_class_reference__field_data_field_access_roles ON node_field_data_field_class_reference.nid = node_field_data_field_class_reference__field_data_field_access_roles.entity_id AND (node_field_data_field_class_reference__field_data_field_access_roles.entity_type = 'node' AND node_field_data_field_class_reference__field_data_field_access_roles.deleted = '0')
-                WHERE (( (node.status = '1')
-                    AND (node.type=:type)
-                  AND (node_field_data_field_class_reference__field_data_field_access_roles.field_access_roles_value IN (:roles)) ))
-                ORDER BY node.changed ASC";
+
+            if($class_nid){
+                $sql = "SELECT node.title AS title, node.nid AS nid, node.changed AS changed, 'node' AS field_data_field_class_reference_node_entity_type
+                    FROM
+                    {node} node
+                    LEFT JOIN {field_data_field_class_reference} field_data_field_class_reference ON node.nid = field_data_field_class_reference.entity_id AND (field_data_field_class_reference.entity_type = 'node' AND field_data_field_class_reference.deleted = '0')
+                    LEFT JOIN {node} node_field_data_field_class_reference ON field_data_field_class_reference.field_class_reference_nid = node_field_data_field_class_reference.nid
+                    LEFT JOIN {field_data_field_access_roles} node_field_data_field_class_reference__field_data_field_access_roles ON node_field_data_field_class_reference.nid = node_field_data_field_class_reference__field_data_field_access_roles.entity_id AND (node_field_data_field_class_reference__field_data_field_access_roles.entity_type = 'node' AND node_field_data_field_class_reference__field_data_field_access_roles.deleted = '0')
+                    WHERE (( (node.status = '1')
+                        AND (node.type=:type)
+                      AND (node_field_data_field_class_reference__field_data_field_access_roles.field_access_roles_value IN (:roles)) ))
+                      AND (field_data_field_class_reference.field_class_reference_nid IN  (:class_nid))
+                    ORDER BY node.changed ASC";
+                $values[":class_nid"] = array($class_nid);
+            }else {
+                $sql = "SELECT node.title AS title, node.nid AS nid, node.changed AS changed, 'node' AS field_data_field_class_reference_node_entity_type
+                    FROM
+                    {node} node
+                    LEFT JOIN {field_data_field_class_reference} field_data_field_class_reference ON node.nid = field_data_field_class_reference.entity_id AND (field_data_field_class_reference.entity_type = 'node' AND field_data_field_class_reference.deleted = '0')
+                    LEFT JOIN {node} node_field_data_field_class_reference ON field_data_field_class_reference.field_class_reference_nid = node_field_data_field_class_reference.nid
+                    LEFT JOIN {field_data_field_access_roles} node_field_data_field_class_reference__field_data_field_access_roles ON node_field_data_field_class_reference.nid = node_field_data_field_class_reference__field_data_field_access_roles.entity_id AND (node_field_data_field_class_reference__field_data_field_access_roles.entity_type = 'node' AND node_field_data_field_class_reference__field_data_field_access_roles.deleted = '0')
+                    WHERE (( (node.status = '1')
+                        AND (node.type=:type)
+                      AND (node_field_data_field_class_reference__field_data_field_access_roles.field_access_roles_value IN (:roles)) ))
+                    ORDER BY node.changed ASC";
+            }
 
             $values[":roles"] = array_keys($user->roles);
         }
@@ -628,16 +662,14 @@ function _get_overview_issue_topic_data_by_user($data)
                     'user_info' => _get_user_get_basic_info($uid),
                     'topics' => array()
                 );
-
-                $topics_array = array();
             }
 
             foreach($user['questions'] as $question){
 
                 //check if this topic has been created for the current user
                 // if not then create the data structure
-                if(!isset($topics_array[$question['topic']])){
-                    $topics_array[$question['topic']] = array(
+                if(!isset($issue_topic_data_by_user[$uid]['topics'][$question['topic']])){
+                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']] = array(
                         'title'=>$question['topic'],
                         'total_questions'=>0,
                         'total_correct'=>0,
@@ -645,8 +677,8 @@ function _get_overview_issue_topic_data_by_user($data)
                     );
                 }
 
-                if(!isset($topics_array[$question['topic']]['skill_assessments'][$d['nid']])){
-                    $topics_array[$question['topic']]['skill_assessments'][$d['nid']] = array(
+                if(!isset($issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']])){
+                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']] = array(
                         'nid'=>$d['nid'],
                         'total_questions'=>0,
                         'total_correct'=>0,
@@ -654,26 +686,24 @@ function _get_overview_issue_topic_data_by_user($data)
                     );
                 }
 
-                $topics_array[$question['topic']]['total_questions'] += 1;
-                $topics_array[$question['topic']]['skill_assessments'][$d['nid']]['total_questions'] += 1;
+                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_questions'] += 1;
+                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['total_questions'] += 1;
                 if($question['correct']){
-                    $topics_array[$question['topic']]['total_correct'] += 1;
-                    $topics_array[$question['topic']]['skill_assessments'][$d['nid']]['total_correct'] += 1;
+                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_correct'] += 1;
+                    $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['total_correct'] += 1;
                 }
 
-                $topics_array[$question['topic']]['percent'] = round($topics_array[$question['topic']]['total_correct']/$topics_array[$question['topic']]['total_questions']*100);
+                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['percent'] = round($issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_correct']/$issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_questions']*100);
 
-                $topics_array[$question['topic']]['skill_assessments'][$d['nid']]['questions'][] = $question;
+                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['questions'][] = $question;
 
             }
 
-            uasort($topics_array, "sort_user_data_by_topic_correct_percentage");
+//            uasort($topics_array, "sort_user_data_by_topic_correct_percentage");
 
-            $issue_topic_data_by_user[$uid]['topics'] = $topics_array;
         }
 
     }
-
 
 
     return $issue_topic_data_by_user;
