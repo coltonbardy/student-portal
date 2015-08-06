@@ -3,6 +3,7 @@
 define("ANSWER_TYPE_BAD", "Bad Response");
 define("ANSWER_TYPE_UNKNOWN", "User didn't know the answer");
 define("ANSWER_TYPE_MORE", "More Corect Answers Needed");
+define("ANSWER_TYPE_MORE_RESPONSES", "User checked more answers than were needed");
 
 function _parse_meta_data($meta_data_row)
 {
@@ -257,7 +258,9 @@ function _parse_user_responses($data, &$errors)
                 $temp_response['answer'] = $q['answer'];
                 $temp_response['topic'] = $q['associated_topic'];
                 $temp_response['skill'] = $q['associated_skill'];
-                $temp_response['correct'] = ($temp_response['details']['total_possible'] === $temp_response['details']['total_correct']) ? true : false;
+
+                $temp_response['correct'] = ($temp_response['details']['total_possible'] === $temp_response['details']['total_correct']
+                    && $temp_response['details']['total_answered'] === $temp_response['details']['total_possible']) ? true : false;
 
                 $temp_user_arr['questions'][] = $temp_response;
 
@@ -367,6 +370,7 @@ function _evaluate_user_response($answer, $response, $options = array())
             break;
         case 'ms':
             $answer_arr = explode(",", $answer);
+
             //remove white space from multiple selects
             foreach ($answer_arr as $key => $answer) {
                 $answer_arr[$key] = trim($answer);
@@ -378,6 +382,11 @@ function _evaluate_user_response($answer, $response, $options = array())
             if (count($answer_arr) > count($response_arr)) {
                 $r['incorrect_details'][] = array(
                     "type" => ANSWER_TYPE_MORE,
+                    "response" => $response
+                );
+            }else if(count($answer_arr) < count($response_arr)){
+                $r['incorrect_details'][] = array(
+                    "type" => ANSWER_TYPE_MORE_RESPONSES,
                     "response" => $response
                 );
             }
@@ -395,7 +404,7 @@ function _evaluate_user_response($answer, $response, $options = array())
                         'type' => ANSWER_TYPE_UNKNOWN,
                         'response' => $response
                     );
-                    $r['unknown_answered'] = 1;
+                    $r['unknown_answered'] += 1;
                 } else if (array_search($response, $answer_arr) !== false) {
                     $r['total_correct'] += 1;
                     $r['total_answered'] += 1;
