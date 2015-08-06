@@ -277,7 +277,7 @@ function _parse_user_responses($data, &$errors)
 
 
                     if ($topic != ""
-                        && array_search($topic, $temp_user_arr['data']['suggested_improvement']['topics']) === false
+                        && _in_array_by_key_value($temp_user_arr['data']['suggested_improvement']['topics'], 'name', $topic) === false
                     ) {
                         $temp_user_arr['data']['suggested_improvement']['topics'][] = array(
                             'name' => $topic,
@@ -289,7 +289,7 @@ function _parse_user_responses($data, &$errors)
 
                     //check that the skill is not empty and doesnt exist in the array
                     if ($skill != ""
-                        && array_search($skill, $temp_user_arr['data']['suggested_improvement']['skills']) === false
+                        && _in_array_by_key_value($temp_user_arr['data']['suggested_improvement']['skills'], 'name', $skill) === false
                     ) {
                         $temp_user_arr['data']['suggested_improvement']['skills'][] = array(
                             'name' => $skill,
@@ -311,6 +311,25 @@ function _parse_user_responses($data, &$errors)
 
     return $r;
 
+}
+
+/**
+ * checks a single level of an array for a key that has a specified value, non strict comparison
+ * @param $arr
+ * @param $key
+ * @param $value
+ * @return bool
+ */
+function _in_array_by_key_value($arr, $key, $value){
+    $r = false;
+    foreach($arr as $a){
+        if($a[$key] == $value){
+            $r = true;
+            break;
+        }
+    }
+
+    return $r;
 }
 
 function _evaluate_user_response($answer, $response, $options = array())
