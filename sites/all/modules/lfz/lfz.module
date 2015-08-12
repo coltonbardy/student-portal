@@ -194,6 +194,15 @@ function lfz_menu()
         'type' => MENU_CALLBACK,
     );
 
+    $items['register/new-student'] = array(
+        'title' => 'New Student Registration',
+        'page callback' => 'custom_registration_form',
+        'callback arguments' => array(3),
+        'page arguments' => array('manage skill assessments'),
+        'expanded' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
 
     return $items;
 }
@@ -219,6 +228,10 @@ function lfz_preprocess_page(&$vars)
     // foreach ($results as $item) {
     //   echo $item['volumeInfo']['title'], "<br /> \n";
     // }
+
+//    echo '<pre>';
+//    print_r($vars['logo']);
+//    echo '</pre>';
 
 }
 
@@ -255,6 +268,13 @@ function lfz_theme($existing, $type, $theme, $path)
         'render element' => 'content',
         'base hook' => 'page',
         'template' => 'page--today',
+        'path' => drupal_get_path('module', 'lfz') . '/templates',
+    );
+    $theme['node__student_notes'] = array(
+        'render element' => 'content',
+        'base hook' => 'node',
+        'template' => 'node--student-notes',
+        // 'variables' => array('node' => (object)array()),
         'path' => drupal_get_path('module', 'lfz') . '/templates',
     );
     $theme['node__resource'] = array(
