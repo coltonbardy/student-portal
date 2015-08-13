@@ -258,6 +258,10 @@ function lfz_permission()
             'title' => t('Manage Skill Assessments'),
             'description' => t('Manage Skill assessments and skill assessment results'),
         ),
+        'manage students' => array(
+            'title' => t('Manage Students'),
+            'description' => t('Manage Students'),
+        ),
     );
 }
 
