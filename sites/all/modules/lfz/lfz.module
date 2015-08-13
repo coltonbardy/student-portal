@@ -277,6 +277,13 @@ function lfz_theme($existing, $type, $theme, $path)
         // 'variables' => array('node' => (object)array()),
         'path' => drupal_get_path('module', 'lfz') . '/templates',
     );
+    $theme['node__students'] = array(
+        'render element' => 'content',
+        'base hook' => 'node',
+        'template' => 'node--students',
+        // 'variables' => array('node' => (object)array()),
+        'path' => drupal_get_path('module', 'lfz') . '/templates',
+    );
     $theme['node__resource'] = array(
         'render element' => 'content',
         'base hook' => 'node',
