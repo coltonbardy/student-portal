@@ -11,6 +11,7 @@
 /scripts/*
 /themes/*
 /web.config
+.idea
 
 sites/all/themes/*
 sites/all/modules/*
