@@ -1144,7 +1144,7 @@ function lfz_mail ($key, &$message, $params) {
         $template_map = mandrill_template_map_load_by_mailsystem($message['id'], $message['module']);
 
         switch ($key) {
-            case 'lfz_module_test':
+            case 'lfz_mandrill_template':
                 // take parameters sent to drupal_mail and insert them into the message under the index for mandrill templating
                 if(isset($params['mandrill_template_content'])){
                     $message['mandrill_template_content'] = $params['mandrill_template_content'];

@@ -557,7 +557,7 @@ function send_test_email()
         )
     );
 
-    $send = drupal_mail("lfz", "lfz_module_test", "ej2586@gmail.com", user_preferred_language($user), $params);
+    $send = drupal_mail("lfz", "lfz_mandrill_template", "ej2586@gmail.com", user_preferred_language($user), $params);
 
     echo '<pre>';
     print_r($send);
