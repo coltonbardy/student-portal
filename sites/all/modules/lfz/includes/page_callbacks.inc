@@ -513,7 +513,7 @@ function skill_assessment_save_results_callback()
     exit;
 }
 
-function skill_assessment_overview_callback($class_nid=false)
+function skill_assessment_overview_callback($class_nid = false)
 {
 
     //check for class nid ortherwise give a form for use to select the class
@@ -525,7 +525,7 @@ function skill_assessment_overview_callback($class_nid=false)
 
     $class_node = node_load($class_nid);
 
-    drupal_set_title($class_node->title." Assessment Overview");
+    drupal_set_title($class_node->title . " Assessment Overview");
 
     $data = _get_assessment_data();
 
@@ -535,7 +535,32 @@ function skill_assessment_overview_callback($class_nid=false)
     $template_data['topic_by_user'] = _get_overview_issue_topic_data_by_user($data);
 
 //    $r = theme('skill_assessment_overview', array('data'=>$template_data));
-    $r = theme('skill_assessment_topic_issues_list', array('data'=>$template_data));
+    $r = theme('skill_assessment_topic_issues_list', array('data' => $template_data));
 
     return $r;
+}
+
+function send_test_email()
+{
+
+    global $user;
+
+    $params = array();
+    $params['mandrill_template_content'] = array(
+        array(
+            "name"=>"main",
+            "content" => "this is the main content being replaced",
+        ),
+        array(
+            "name"=>"footer",
+            "content" => "this should be the footer content"
+        )
+    );
+
+    $send = drupal_mail("lfz", "lfz_module_test", "ej2586@gmail.com", user_preferred_language($user), $params);
+
+    echo '<pre>';
+    print_r($send);
+    echo '</pre>';
+
 }
