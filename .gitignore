@@ -12,6 +12,7 @@
 /themes/*
 /web.config
 
+# added modules and themes
 sites/all/themes/*
 sites/all/modules/*
 sites/all/libraries/*
