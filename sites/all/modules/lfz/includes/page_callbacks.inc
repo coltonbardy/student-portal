@@ -235,7 +235,9 @@ function ajax_get_agenda_items_callback($date = false)
     $agenda_node = get_daily_agenda($date, $class_nid);
 
     $res = array('success' => false, 'content' => null);
+
     $agenda_items = get_agenda_items_by_agenda($agenda_node);
+
     if ($agenda_items) {
         $res['success'] = true;
 

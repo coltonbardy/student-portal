@@ -641,6 +641,7 @@ function get_daily_agenda($date = false, $class_nid = false)
     $week_data = thisWeekInfo($date);
 
     $data = get_view_data('daily/agenda', array($week_data['date'], $class_nid));
+
     $r = false;
     if ($data['nodes'] && count($data['nodes']) > 0) {
         $r = node_load($data['nodes'][0]['node']['nid']);

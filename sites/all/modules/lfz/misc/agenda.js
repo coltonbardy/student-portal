@@ -13,9 +13,14 @@
 			lfz = Drupal.settings.lfz;
 		}
 
-		$('.sortable').sortable({
-			connectWith: ".connected-sortable"
-		}).on('sort', sortHandler);
+        try{
+            $('.sortable').sortable({
+                connectWith: ".connected-sortable"
+            }).on('sort', sortHandler);
+        }catch(e){
+            console.error("Sortable isnt supported for some reason");
+        }
+
 
 		function sortHandler(event, ui){
 
