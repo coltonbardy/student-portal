@@ -522,6 +522,7 @@ function _agenda_select_class($redirect_url='')
 {
 
     $users_classes = _get_users_classes();
+    
     if (count($users_classes) === 1 &&
         $redirect_url != '') {
         $redirect_url = str_replace("{class_nid}", $users_classes[0]->nid, $redirect_url);
@@ -979,7 +980,6 @@ function _load_node_basic($nid)
 
 function _get_users_classes($uid = false)
 {
-
 
     if (!$uid) {
         global $user;
