@@ -185,12 +185,20 @@ function lfz_menu()
         'type' => MENU_CALLBACK,
     );
 
+    $items['hipchat/api/question'] = array(
+        'title' => 'Hipchat question API',
+        'page callback' => 'hipchat_api_question',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
 
     return $items;
 }
 
 module_load_include('inc', 'lfz', 'includes/page_callbacks');
 module_load_include('inc', 'lfz', 'includes/sa');
+module_load_include('inc', 'lfz', 'includes/hipchat');
 
 /**
  * Implements hook_admin_paths_alter().
@@ -231,6 +239,10 @@ function lfz_permission()
         'view agenda item details' => array(
             'title' => t('View agenda Item Details'),
             'description' => t('Can view agenda and agenda items Detail pages'),
+        ),
+        'edit agenda item details' => array(
+            'title' => t('Edit agenda Item Details'),
+            'description' => t('Can edit agenda and agenda items'),
         ),
         'manage skill assessments' => array(
             'title' => t('Manage Skill Assessments'),
@@ -787,7 +799,7 @@ function _create_node($arr = array())
     }
     node_object_prepare($node); // Sets some defaults. Invokes hook_prepare() and hook_node_prepare().
     $node->language = LANGUAGE_NONE; // Or e.g. 'en' if locale is enabled
-    $node->uid = $user->uid;
+    $node->uid = (isset($arr['uid']))?$arr['uid']:$user->uid; // if uid is passed then use it otherwise use the currently logged in user
     $node->status = 1; //(1 or 0): published or not
     $node->promote = 0; //(1 or 0): promoted to front page
     $node->comment = (isset($arr['comment'])) ? $arr['comment'] : 2; // 0 = comments disabled, 1 = read only, 2 = read/write

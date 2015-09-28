@@ -252,7 +252,7 @@ function _parse_user_responses($data, &$errors)
 
                 $options = array(
                     'type' => $q['question_type'],
-                    'unknown_answer_val' => $meta_data['unknown_answer_val']
+                    'unknown_answer_val' => (isset($meta_data['unknown_answer_val']))?$meta_data['unknown_answer_val']:"I don't know"
                 );
                 $temp_response['details'] = _evaluate_user_response($q['answer'], $response[$q['question']], $options);
                 $temp_response['answer'] = $q['answer'];
