@@ -11,14 +11,29 @@ $student_comments = array_merge(array(), $content['comments']);
 $instructor_comments = array_merge(array(), $content['comments']);
 $student_comments['#lfz'] = array('show_role' => 'student', 'show_comment_form' => true, 'show_user_thumb' => true);
 $instructor_comments['#lfz'] = array('show_role' => 'instructor');
+
+$panel_class = (count($links) > 0 )?"panel-info":"panel-warning";
+
 ?>
 <div id="node-<?php print $node->nid; ?>" class="<?php print $classes; ?> row clearfix"<?php print $attributes; ?>>
     <div class="col-xs-8">
         <div class="row">
             <div class="col-xs-12">
-                <div class="panel panel-default">
+                <div class="panel <?php echo $panel_class; ?>">
                     <div class="panel-heading">
-                        <h3 class="panel-title">Resource Links</small></h3>
+                        <?php
+                            if(count($links) == 0) {
+                        ?>
+                            <h3 class="panel-title">Resource Links
+                                <small class="label label-warning">Coming Soon</small>
+                            </h3>
+                        <?php
+                            }else{
+                        ?>
+                        <h3 class="panel-title">Resource Links</h3>
+                        <?php
+                            }
+                        ?>
                     </div>
                     <div class="panel-body">
                         <div class="row">
