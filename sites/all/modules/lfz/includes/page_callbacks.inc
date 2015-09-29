@@ -1,5 +1,168 @@
 <?php
 
+function is_valid_url($url){
+    if (preg_match("/\b(?:(?:https?|ftp):\/\/|www\.)[-a-z0-9+&@#\/%?=~_|!:,.;]*[-a-z0-9+&@#\/%=~_|]/i", $url)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+function hipchat_api_question()
+{
+    $temp_message_file = DRUPAL_ROOT . '/' . drupal_get_path('module', 'lfz') . '/tmp/queue/test.json';
+
+    //pull request body, aparently this works
+    $message_body = file_get_contents("php://input");
+
+    $is_test = (isset($_REQUEST['test']))?(bool) $_REQUEST['test']:false;
+
+    //LOCAL TESTING ONLY this can be ignored
+    if(!$message_body
+        && $is_test){
+        $message_body = '{"event": "room_message", "item": {"message": {"date": "2015-09-23T03:12:08.182564+00:00", "from": {"id": 1848205, "links": {"self": "https://api.hipchat.com/v2/user/1848205"}, "mention_name": "EricJohnson", "name": "Eric Johnson", "version": "00000000"}, "id": "70e43903-9a77-4409-ad31-b12724fdf4d9", "mentions": [], "message": "/q help please? http://google.com", "type": "message"}, "room": {"id": 1299248, "links": {"members": "https://api.hipchat.com/v2/room/1299248/member", "participants": "https://api.hipchat.com/v2/room/1299248/participant", "self": "https://api.hipchat.com/v2/room/1299248", "webhooks": "https://api.hipchat.com/v2/room/1299248/webhook"}, "name": "Teaching", "version": "6THUMLP6"}}, "oauth_client_id": "3bf98ff9-b847-4ea0-9413-20959a08230d", "webhook_id": 2632464}';
+    }
+
+
+    //decode the body of the message string
+    $data = json_decode($message_body, true);
+
+    $temp_matches = array();
+
+    $hipchat_user_id = $data['item']['message']['from']['id'];
+
+    $message_user_data = hipchat_request("user", array($hipchat_user_id));
+
+    //check if we are testing
+    if(!$is_test){
+        //load user by email of hipchat user
+        $user = user_load_by_mail($message_user_data['email']);
+    }else{
+        //use user with development email address
+        $user = user_load_by_mail("development@learningfuze.com");
+    }
+
+
+    //insert data into watchdog table for debugging
+    watchdog(WATCHDOG_DEBUG, json_encode($data));
+
+    //check that the event is a room message,
+    // this would allow for multiple tips of web hooks to call the same url
+    if($data['event'] === 'room_message'){
+        $message_string = $data['item']['message']['message'];
+        $message_user = (isset($data['item']['message']['form']['name']))?$data['item']['message']['form']['name']:false;
+
+        //match against this type of string /q any string followed by a question mark? Topic Component URL
+        preg_match_all("/\/q ([^?]+\?)[ ]*([^ ]*)[ ]*(.*)/", $message_string, $temp_matches);
+    }
+
+    $matches = array();
+
+    //because empty matches are still grouped by () in the regex above then we have to loop through the array and pull
+    // out none empty matches
+    foreach($temp_matches as $match){
+        if(!empty($match)){
+            $matches[] = $match;
+        }
+    }
+
+    //check if there are more matches which would mean more than a question parameter after the /q
+    if(count(array_values($matches)) >= 2){
+        $question = $matches[1][0];
+    }else{
+        //build out message response to a valid question asked
+        $r = array(
+            "color" => "red",
+            "message" => "Message needs to be formatted like this. <b>/q sentence formatted like a question ending with a question mark?</b>",
+            "notify" => false,
+            "message_format" => "html"
+        );
+
+        drupal_json_output($r);
+        exit;
+    }
+
+    $param1 = (count($matches[2])>0)?trim($matches[2][0]):false;
+    $param2 = (count($matches[3])>0)?trim($matches[3][0]):false;
+
+    $url = false;
+    $category = false;
+
+    if($param1){
+        //checking to make sure its a category and not a url
+        if(!is_valid_url($param1)) {
+            $category = $param1;
+
+            //check if there is a second parameter
+            if($param1 && is_valid_url($param2)){
+                $url = $param2;
+            }
+
+        }else{
+            $url = $param1;
+        }
+    }
+
+
+    $user_queue_item = array(
+        'type'=>'user_queue_item',
+        'title'=>$question,
+        'body'=>array(
+            'und'=>array(
+                array(
+                    'value'=>$url,
+                    'summary'=>NULL,
+                    'format'=>NULL,
+                    'safe_value'=>htmlentities($url),
+                    'safe_summary'=>NULL
+                )
+            )
+        ),
+        'uid'=>$user->uid,
+        'field_user_queue_item_category'=> array(
+            'und'=>array(
+                array(
+                    'value'=>$category,
+                    'format'=>NULL,
+                    'safe_value'=>htmlentities($category)
+                )
+            )
+        ),
+        'field_queue_item_status'=>array(
+            'und'=>array(
+                array(
+                    'value'=>'waiting'
+                )
+            )
+        )
+    );
+
+    $new_node = _create_node($user_queue_item);
+
+    $google_search_link = string_to_google_search_link($question);
+
+    $r = array(
+        "color" => "green",
+        "message" => "<p>Thanks for submitting your question to the queue. An instructor will contact you shortly. While your waiting, here are a couple links that may help you.</p><ul><li>Track your questions : ".l("Portal Help Queue", "http://portal.learningfuze.com/my-queue")."</li><li>Have you tried Google? : ".l("Click here for direct google search link", $google_search_link) ."</li></ul>",
+        "notify" => false,
+        "message_format" => "html"
+    );
+
+
+    drupal_json_output($r);
+}
+
+function string_to_google_search_link($string){
+
+    $google_search_string = str_replace(" ", "+", $string);
+    $google_search_string = str_replace("?", "", $google_search_string);
+
+    $base_link = "http://www.google.com/search?q=".$google_search_string;
+
+    return $base_link;
+}
+
 
 function ajax_remove_agenda_item_callback()
 {
@@ -515,7 +678,7 @@ function skill_assessment_save_results_callback()
     exit;
 }
 
-function skill_assessment_overview_callback($class_nid=false)
+function skill_assessment_overview_callback($class_nid = false)
 {
 
     //check for class nid ortherwise give a form for use to select the class
@@ -527,7 +690,7 @@ function skill_assessment_overview_callback($class_nid=false)
 
     $class_node = node_load($class_nid);
 
-    drupal_set_title($class_node->title." Assessment Overview");
+    drupal_set_title($class_node->title . " Assessment Overview");
 
     $data = _get_assessment_data();
 
@@ -537,7 +700,7 @@ function skill_assessment_overview_callback($class_nid=false)
     $template_data['topic_by_user'] = _get_overview_issue_topic_data_by_user($data);
 
 //    $r = theme('skill_assessment_overview', array('data'=>$template_data));
-    $r = theme('skill_assessment_topic_issues_list', array('data'=>$template_data));
+    $r = theme('skill_assessment_topic_issues_list', array('data' => $template_data));
 
     return $r;
 }
