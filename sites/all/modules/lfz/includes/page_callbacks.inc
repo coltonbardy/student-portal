@@ -1,7 +1,10 @@
 <?php
 
+function question_queue_instructor_resolve($queue_item_nid){
+    question_queue_resolve($queue_item_nid, "student-queue");
+}
 
-function question_queue_resolve($queue_item_nid)
+function question_queue_resolve($queue_item_nid, $redirect_url = "my-queue")
 {
     global $user;
 
@@ -33,13 +36,10 @@ function question_queue_resolve($queue_item_nid)
         } else {
             drupal_set_message('Question "'.$node->title.'" has been resolved.', 'status');
         }
-
-        drupal_goto("my-queue");
     } else {
-
         drupal_set_message("Can't resolve a queue item with an invalid Node id", 'warning');
-        drupal_goto("my-queue");
     }
+    drupal_goto($redirect_url);
 }
 
 function question_queue_answer_now($queue_item_nid)
