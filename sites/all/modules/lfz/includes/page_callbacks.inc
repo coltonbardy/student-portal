@@ -1,12 +1,104 @@
 <?php
 
-function is_valid_url($url){
-    if (preg_match("/\b(?:(?:https?|ftp):\/\/|www\.)[-a-z0-9+&@#\/%?=~_|!:,.;]*[-a-z0-9+&@#\/%=~_|]/i", $url)) {
-        return true;
+
+function question_queue_resolve($queue_item_nid)
+{
+    global $user;
+
+    $node = node_load($queue_item_nid);
+
+    if (isset($node->nid)
+        && $node->type == "user_queue_item"
+    ) {
+
+        // user is a student not an instructor but isn't the user who opened the queue item
+        if (user_has_role(array_search('student', user_roles()))
+            && $user->uid != $node->uid
+            && !user_has_role(array_search('instructor', user_roles()))
+        ) {
+            drupal_set_message("You cant resolve a question submitted by another Student", 'warning');
+            drupal_goto("my-queue");
+        }
+
+        $node->field_queue_item_status = array(
+            'und' => array(
+                array(
+                    'value' => 'complete'
+                )
+            )
+        );
+
+        if (!lfz_node_save($node)) {
+            drupal_set_message("While attempting to resolve a queue item there was an error saving, please contact the development team.", 'warning');
+        } else {
+            drupal_set_message('Question "'.$node->title.'" has been resolved.', 'status');
+        }
+
+        drupal_goto("my-queue");
+    } else {
+
+        drupal_set_message("Can't resolve a queue item with an invalid Node id", 'warning');
+        drupal_goto("my-queue");
     }
-    else {
-        return false;
+}
+
+function question_queue_answer_now($queue_item_nid)
+{
+
+    global $user;
+
+    $node = node_load($queue_item_nid);
+
+    if (isset($node->nid)
+        && $node->type == "user_queue_item"
+    ) {
+
+        //check if there is an assigned array && if its set
+        if (count($node->field_queue_item_assigned_user) > 0
+            && isset($node->field_queue_item_assigned_user['und'][0]['uid'])
+        ) {
+
+            if ($node->field_queue_item_assigned_user['und'][0]['uid'] == $user->uid) {
+                $redirect_url = "node/" . $node->nid;
+                drupal_goto($redirect_url);
+            } else {
+                // set message and goto to the student queue
+                drupal_set_message("This queue item has already been assigned to another user", 'warning');
+                drupal_goto("student-queue");
+            }
+
+        } else {
+
+            //set to the current logged in user and open it from waiting
+            $node->field_queue_item_assigned_user = array(
+                'und' => array(
+                    array(
+                        'uid' => $user->uid
+                    )
+                )
+            );
+            $node->field_queue_item_status = array(
+                'und' => array(
+                    array(
+                        'value' => 'open'
+                    )
+                )
+            );
+
+            if (!lfz_node_save($node)) {
+                drupal_set_message("While attempting to assign a user to the queue item there was an error saving, please contact the development team.", 'warning');
+
+                drupal_goto("student-queue");
+            } else {
+                $redirect_url = "node/" . $node->nid;
+                drupal_goto($redirect_url);
+            }
+        }
+    } else {
+        drupal_set_message("Can't answer a queue item with an invalid Node id", 'warning');
     }
+
+    drupal_goto("student-queue");
 }
 
 function hipchat_api_question()
@@ -16,11 +108,12 @@ function hipchat_api_question()
     //pull request body, aparently this works
     $message_body = file_get_contents("php://input");
 
-    $is_test = (isset($_REQUEST['test']))?(bool) $_REQUEST['test']:false;
+    $is_test = (isset($_REQUEST['test'])) ? (bool)$_REQUEST['test'] : false;
 
     //LOCAL TESTING ONLY this can be ignored
-    if(!$message_body
-        && $is_test){
+    if (!$message_body
+        && $is_test
+    ) {
         $message_body = '{"event": "room_message", "item": {"message": {"date": "2015-09-23T03:12:08.182564+00:00", "from": {"id": 1848205, "links": {"self": "https://api.hipchat.com/v2/user/1848205"}, "mention_name": "EricJohnson", "name": "Eric Johnson", "version": "00000000"}, "id": "70e43903-9a77-4409-ad31-b12724fdf4d9", "mentions": [], "message": "/q help please? http://google.com", "type": "message"}, "room": {"id": 1299248, "links": {"members": "https://api.hipchat.com/v2/room/1299248/member", "participants": "https://api.hipchat.com/v2/room/1299248/participant", "self": "https://api.hipchat.com/v2/room/1299248", "webhooks": "https://api.hipchat.com/v2/room/1299248/webhook"}, "name": "Teaching", "version": "6THUMLP6"}}, "oauth_client_id": "3bf98ff9-b847-4ea0-9413-20959a08230d", "webhook_id": 2632464}';
     }
 
@@ -35,10 +128,10 @@ function hipchat_api_question()
     $message_user_data = hipchat_request("user", array($hipchat_user_id));
 
     //check if we are testing
-    if(!$is_test){
+    if (!$is_test) {
         //load user by email of hipchat user
         $user = user_load_by_mail($message_user_data['email']);
-    }else{
+    } else {
         //use user with development email address
         $user = user_load_by_mail("development@learningfuze.com");
     }
@@ -49,9 +142,9 @@ function hipchat_api_question()
 
     //check that the event is a room message,
     // this would allow for multiple tips of web hooks to call the same url
-    if($data['event'] === 'room_message'){
+    if ($data['event'] === 'room_message') {
         $message_string = $data['item']['message']['message'];
-        $message_user = (isset($data['item']['message']['form']['name']))?$data['item']['message']['form']['name']:false;
+        $message_user = (isset($data['item']['message']['form']['name'])) ? $data['item']['message']['form']['name'] : false;
 
         //match against this type of string /q any string followed by a question mark? Topic Component URL
         preg_match_all("/\/q ([^?]+\?)[ ]*([^ ]*)[ ]*(.*)/", $message_string, $temp_matches);
@@ -61,16 +154,16 @@ function hipchat_api_question()
 
     //because empty matches are still grouped by () in the regex above then we have to loop through the array and pull
     // out none empty matches
-    foreach($temp_matches as $match){
-        if(!empty($match)){
+    foreach ($temp_matches as $match) {
+        if (!empty($match)) {
             $matches[] = $match;
         }
     }
 
     //check if there are more matches which would mean more than a question parameter after the /q
-    if(count(array_values($matches)) >= 2){
+    if (count(array_values($matches)) >= 2) {
         $question = $matches[1][0];
-    }else{
+    } else {
         //build out message response to a valid question asked
         $r = array(
             "color" => "red",
@@ -83,56 +176,56 @@ function hipchat_api_question()
         exit;
     }
 
-    $param1 = (count($matches[2])>0)?trim($matches[2][0]):false;
-    $param2 = (count($matches[3])>0)?trim($matches[3][0]):false;
+    $param1 = (count($matches[2]) > 0) ? trim($matches[2][0]) : false;
+    $param2 = (count($matches[3]) > 0) ? trim($matches[3][0]) : false;
 
     $url = false;
     $category = false;
 
-    if($param1){
+    if ($param1) {
         //checking to make sure its a category and not a url
-        if(!is_valid_url($param1)) {
+        if (!is_valid_url($param1)) {
             $category = $param1;
 
             //check if there is a second parameter
-            if($param1 && is_valid_url($param2)){
+            if ($param1 && is_valid_url($param2)) {
                 $url = $param2;
             }
 
-        }else{
+        } else {
             $url = $param1;
         }
     }
 
 
     $user_queue_item = array(
-        'type'=>'user_queue_item',
-        'title'=>$question,
-        'body'=>array(
-            'und'=>array(
+        'type' => 'user_queue_item',
+        'title' => $question,
+        'body' => array(
+            'und' => array(
                 array(
-                    'value'=>$url,
-                    'summary'=>NULL,
-                    'format'=>NULL,
-                    'safe_value'=>htmlentities($url),
-                    'safe_summary'=>NULL
+                    'value' => $url,
+                    'summary' => NULL,
+                    'format' => NULL,
+                    'safe_value' => htmlentities($url),
+                    'safe_summary' => NULL
                 )
             )
         ),
-        'uid'=>$user->uid,
-        'field_user_queue_item_category'=> array(
-            'und'=>array(
+        'uid' => $user->uid,
+        'field_user_queue_item_category' => array(
+            'und' => array(
                 array(
-                    'value'=>$category,
-                    'format'=>NULL,
-                    'safe_value'=>htmlentities($category)
+                    'value' => $category,
+                    'format' => NULL,
+                    'safe_value' => htmlentities($category)
                 )
             )
         ),
-        'field_queue_item_status'=>array(
-            'und'=>array(
+        'field_queue_item_status' => array(
+            'und' => array(
                 array(
-                    'value'=>'waiting'
+                    'value' => 'waiting'
                 )
             )
         )
@@ -144,23 +237,13 @@ function hipchat_api_question()
 
     $r = array(
         "color" => "green",
-        "message" => "<p>Thanks for submitting your question to the queue. An instructor will contact you shortly. While your waiting, here are a couple links that may help you.</p><ul><li>Track your questions : ".l("Portal Help Queue", "http://portal.learningfuze.com/my-queue")."</li><li>Have you tried Google? : ".l("Click here for direct google search link", $google_search_link) ."</li></ul>",
+        "message" => "<p>Thanks for submitting your question to the queue. An instructor will contact you shortly. While your waiting, here are a couple links that may help you.</p><ul><li>Track your questions : " . l("Portal Help Queue", "http://portal.learningfuze.com/my-queue") . "</li><li>Have you tried Google? : " . l("Click here for direct google search link", $google_search_link) . "</li></ul>",
         "notify" => false,
         "message_format" => "html"
     );
 
 
     drupal_json_output($r);
-}
-
-function string_to_google_search_link($string){
-
-    $google_search_string = str_replace(" ", "+", $string);
-    $google_search_string = str_replace("?", "", $google_search_string);
-
-    $base_link = "http://www.google.com/search?q=".$google_search_string;
-
-    return $base_link;
 }
 
 
