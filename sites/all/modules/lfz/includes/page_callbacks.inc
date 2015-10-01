@@ -1,6 +1,7 @@
 <?php
 
-function question_queue_instructor_resolve($queue_item_nid){
+function question_queue_instructor_resolve($queue_item_nid)
+{
     question_queue_resolve($queue_item_nid, "student-queue");
 }
 
@@ -34,7 +35,7 @@ function question_queue_resolve($queue_item_nid, $redirect_url = "my-queue")
         if (!lfz_node_save($node)) {
             drupal_set_message("While attempting to resolve a queue item there was an error saving, please contact the development team.", 'warning');
         } else {
-            drupal_set_message('Question "'.$node->title.'" has been resolved.', 'status');
+            drupal_set_message('Question "' . $node->title . '" has been resolved.', 'status');
         }
     } else {
         drupal_set_message("Can't resolve a queue item with an invalid Node id", 'warning');
@@ -42,12 +43,14 @@ function question_queue_resolve($queue_item_nid, $redirect_url = "my-queue")
     drupal_goto($redirect_url);
 }
 
-function question_queue_answer_now($queue_item_nid)
+function question_queue_open_question($queue_item_nid)
 {
 
     global $user;
 
     $node = node_load($queue_item_nid);
+
+    $hipchat_user_id = (isset($node->field_message_user_id['und'][0]['value']))?$node->field_message_user_id['und'][0]['value']:false;
 
     if (isset($node->nid)
         && $node->type == "user_queue_item"
@@ -90,6 +93,22 @@ function question_queue_answer_now($queue_item_nid)
 
                 drupal_goto("student-queue");
             } else {
+
+                $instructor_user_name = _user_get_name($user->uid);
+
+                $message_user_name = _user_get_name($node->uid);
+
+                $auto_response_message = '<p>Hi '.$message_user_name.', <br/> your question <b>\"'.$node->title.'\"</b> that was inserted into the queue has been opened by <span style="color:green">'.$instructor_user_name."</span>.</p>";
+                $auto_response_message .= "<p>".$instructor_user_name." will be reaching out to you shortly, <b>there is no need to respond to this message</b></p>";
+
+                if($hipchat_user_id){
+                    if(!hipchat_send_message($auto_response_message, $hipchat_user_id)){
+                        drupal_set_message("We attempted to send a message to the user that submitted the question but we were unable", 'warning');
+                    }
+                }else{
+                    drupal_set_message("Unable to pull a Hipchat user id from the original message, an automatic message wasn't sent out to the user", 'warning');
+                }
+
                 $redirect_url = "node/" . $node->nid;
                 drupal_goto($redirect_url);
             }
@@ -114,7 +133,7 @@ function hipchat_api_question()
     if (!$message_body
         && $is_test
     ) {
-        $message_body = '{"event": "room_message", "item": {"message": {"date": "2015-09-23T03:12:08.182564+00:00", "from": {"id": 1848205, "links": {"self": "https://api.hipchat.com/v2/user/1848205"}, "mention_name": "EricJohnson", "name": "Eric Johnson", "version": "00000000"}, "id": "70e43903-9a77-4409-ad31-b12724fdf4d9", "mentions": [], "message": "/q help please? http://google.com", "type": "message"}, "room": {"id": 1299248, "links": {"members": "https://api.hipchat.com/v2/room/1299248/member", "participants": "https://api.hipchat.com/v2/room/1299248/participant", "self": "https://api.hipchat.com/v2/room/1299248", "webhooks": "https://api.hipchat.com/v2/room/1299248/webhook"}, "name": "Teaching", "version": "6THUMLP6"}}, "oauth_client_id": "3bf98ff9-b847-4ea0-9413-20959a08230d", "webhook_id": 2632464}';
+        $message_body = '{"event": "room_message", "item": {"message": {"date": "2015-09-23T03:12:08.182564+00:00", "from": {"id": 1848205, "links": {"self": "https://api.hipchat.com/v2/user/1848205"}, "mention_name": "EricJohnson", "name": "Eric Johnson", "version": "00000000"}, "id": "70e43903-9a77-4409-ad31-b12724fdf4d9", "mentions": [], "message": "/q help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please? http://google.com", "type": "message"}, "room": {"id": 1299248, "links": {"members": "https://api.hipchat.com/v2/room/1299248/member", "participants": "https://api.hipchat.com/v2/room/1299248/participant", "self": "https://api.hipchat.com/v2/room/1299248", "webhooks": "https://api.hipchat.com/v2/room/1299248/webhook"}, "name": "Teaching", "version": "6THUMLP6"}}, "oauth_client_id": "3bf98ff9-b847-4ea0-9413-20959a08230d", "webhook_id": 2632464}';
     }
 
 
@@ -197,17 +216,29 @@ function hipchat_api_question()
         }
     }
 
+    $short_question = false;
+    $body = $url;
+
+    if(strlen($question)>255){
+        $short_question = substr($question, 0, 254);
+        $body = $question . " | ".$url;
+    }
+
+    echo '<pre>';
+    print_r($short_question);
+    echo '</pre>';
+
 
     $user_queue_item = array(
         'type' => 'user_queue_item',
-        'title' => $question,
+        'title' => ($short_question)?$short_question:$question,
         'body' => array(
             'und' => array(
                 array(
-                    'value' => $url,
+                    'value' => $body,
                     'summary' => NULL,
                     'format' => NULL,
-                    'safe_value' => htmlentities($url),
+                    'safe_value' => htmlentities($body),
                     'safe_summary' => NULL
                 )
             )
@@ -228,6 +259,13 @@ function hipchat_api_question()
                     'value' => 'waiting'
                 )
             )
+        ),
+        'field_message_user_id' => array(
+            'und' => array(
+                array(
+                    'value' => $hipchat_user_id
+                )
+            )
         )
     );
 
@@ -245,7 +283,6 @@ function hipchat_api_question()
 
     drupal_json_output($r);
 }
-
 
 function ajax_remove_agenda_item_callback()
 {

@@ -192,9 +192,9 @@ function lfz_menu()
         'type' => MENU_CALLBACK,
     );
 
-    $items['question-queue/answer-now/%'] = array(
+    $items['question-queue/open-question/%'] = array(
         'title' => 'Question Queue Answer now',
-        'page callback' => 'question_queue_answer_now',
+        'page callback' => 'question_queue_open_question',
         'page arguments' => array(2),
         'access arguments' => array('answer user queue'),
         'expanded' => TRUE,
@@ -1163,6 +1163,25 @@ function _get_user_get_basic_info($uid = false)
     }
 
     return $r;
+}
+
+function _user_get_name($user=false){
+
+    if(!$user){
+        global $user;
+    }
+    $user_details = array();
+
+    if(is_object($user)){
+        $user_details = user_load($user->uid);
+    }else if(is_string($user) || is_int($user)){
+        $user_details = user_load($user);
+    }
+
+    $first_name = (isset($user_details->field_first_name['und'][0]['safe_value']))?$user_details->field_first_name['und'][0]['safe_value']:"";
+    $last_name = (isset($user_details->field_last_name['und'][0]['safe_value']))?$user_details->field_last_name['und'][0]['safe_value']:"";
+
+    return trim($first_name." ".$last_name);
 }
 
 function is_valid_url($url){

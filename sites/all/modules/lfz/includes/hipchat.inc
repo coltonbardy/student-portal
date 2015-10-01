@@ -1,18 +1,32 @@
 <?php
 
-define("HIPCHAT_AUTH_TOKEN", "fF6MS1rOEpEoGQDpX6I2fwM1EPIzeFUCHwuuikDj");
-define("HIPCHAT_AUTH_TOKEN_GLOBAL", "l2iUgRQqla7pu8os1166j1hTGFk4pg3EkyArz0RU");
+define("HIPCHAT_AUTH_TOKEN_PORTAL", "f0uWcn2EYZk3EKmzf2q5648gL7WbZQk5vA3z2hjg");
 
-function hipchat_request($api, $ags=array(), $auth_token=HIPCHAT_AUTH_TOKEN_GLOBAL, $decode=true){
+function hipchat_request($api, $ags=array(), $request_body=false, $auth_token=HIPCHAT_AUTH_TOKEN_PORTAL, $decode=true){
 
     if(!isset($api)){
         return false;
     }
 
-    $url = "https://api.hipchat.com/v2/".$api."/".join("/", $ags)."?auth_token=".$auth_token;
+    $url = "https://api.hipchat.com/v2/".$api;
+    if(count($ags)>0){
+        $url .= "/".join("/", $ags);
+    }
+    if(isset($auth_token)){
+        $url .= "?auth_token=".$auth_token;
+    }
 
     $c = curl_init();
     curl_setopt($c, CURLOPT_URL, $url);
+
+    if($request_body){
+        curl_setopt($c, CURLOPT_POST, 1);
+        curl_setopt($c, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json'
+        ));
+        curl_setopt($c, CURLOPT_POSTFIELDS, json_encode($request_body));
+    }
+
     curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($c, CURLOPT_SSL_VERIFYPEER, 0);
     $data = curl_exec($c);
@@ -22,4 +36,27 @@ function hipchat_request($api, $ags=array(), $auth_token=HIPCHAT_AUTH_TOKEN_GLOB
     }
 
     return ($decode && isset($decoded_data))?$decoded_data:$data;
+}
+
+function hipchat_send_message($message, $to){
+
+    $message_details = array(
+        "color"=>"green",
+        "message"=>$message,
+        "notify"=>true,
+        "message_format"=>"html"
+    );
+
+    if($to){
+        $user_message_response = hipchat_request('user', array($to, "message"), $message_details);
+
+        if($user_message_response != ""){
+            watchdog(WATCHDOG_WARNING, $user_message_response);
+            return false;
+        }
+    }else{
+        return false;
+    }
+
+    return true;
 }
