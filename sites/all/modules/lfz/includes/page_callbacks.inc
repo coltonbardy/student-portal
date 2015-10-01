@@ -122,6 +122,7 @@ function question_queue_open_question($queue_item_nid)
 
 function hipchat_api_question()
 {
+
     $temp_message_file = DRUPAL_ROOT . '/' . drupal_get_path('module', 'lfz') . '/tmp/queue/test.json';
 
     //pull request body, aparently this works
@@ -133,7 +134,7 @@ function hipchat_api_question()
     if (!$message_body
         && $is_test
     ) {
-        $message_body = '{"event": "room_message", "item": {"message": {"date": "2015-09-23T03:12:08.182564+00:00", "from": {"id": 1848205, "links": {"self": "https://api.hipchat.com/v2/user/1848205"}, "mention_name": "EricJohnson", "name": "Eric Johnson", "version": "00000000"}, "id": "70e43903-9a77-4409-ad31-b12724fdf4d9", "mentions": [], "message": "/q help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please? http://google.com", "type": "message"}, "room": {"id": 1299248, "links": {"members": "https://api.hipchat.com/v2/room/1299248/member", "participants": "https://api.hipchat.com/v2/room/1299248/participant", "self": "https://api.hipchat.com/v2/room/1299248", "webhooks": "https://api.hipchat.com/v2/room/1299248/webhook"}, "name": "Teaching", "version": "6THUMLP6"}}, "oauth_client_id": "3bf98ff9-b847-4ea0-9413-20959a08230d", "webhook_id": 2632464}';
+        $message_body = '{"event": "room_message", "item": {"message": {"date": "2015-09-23T03:12:08.182564+00:00", "from": {"id": 1848205, "links": {"self": "https://api.hipchat.com/v2/user/1848205"}, "mention_name": "EricJohnson", "name": "Eric Johnson", "version": "00000000"}, "id": "70e43903-9a77-4409-ad31-b12724fdf4d9", "mentions": [], "message": "/q hipchat phpstorm help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please help please? http://google.com", "type": "message"}, "room": {"id": 1299248, "links": {"members": "https://api.hipchat.com/v2/room/1299248/member", "participants": "https://api.hipchat.com/v2/room/1299248/participant", "self": "https://api.hipchat.com/v2/room/1299248", "webhooks": "https://api.hipchat.com/v2/room/1299248/webhook"}, "name": "Teaching", "version": "6THUMLP6"}}, "oauth_client_id": "3bf98ff9-b847-4ea0-9413-20959a08230d", "webhook_id": 2632464}';
     }
 
 
@@ -216,22 +217,23 @@ function hipchat_api_question()
         }
     }
 
-    $short_question = false;
     $body = $url;
 
-    if(strlen($question)>255){
-        $short_question = substr($question, 0, 254);
-        $body = $question . " | ".$url;
-    }
-
-    echo '<pre>';
-    print_r($short_question);
-    echo '</pre>';
-
+    //node title is made up of the acroynm for the node type followed by keywords pulled from keyword list here hipchat_key_words & then a timestamp
+    $message_keywords = search_message_for_key_words($question);
+    $keywords_for_title = (count($message_keywords)>0)?" ".join(" ", $message_keywords). " -":"";
+    $node_title = 'uqi -'.$keywords_for_title." ".time();
 
     $user_queue_item = array(
         'type' => 'user_queue_item',
-        'title' => ($short_question)?$short_question:$question,
+        'title' => $node_title,
+        'field_queue_question'=>array(
+            'und'=>array(
+                array(
+                    'value'=>$question
+                )
+            )
+        ),
         'body' => array(
             'und' => array(
                 array(

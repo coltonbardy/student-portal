@@ -35,7 +35,7 @@ $lfz_output = $output;
 
 switch ($raw_value) {
     case 'waiting':
-        $lfz_output = l('<div class="btn btn-success pull-right">Open Question</div>', 'question-queue/open-question/'.$nid, array('html' => true));
+        $lfz_output = l('<div class="btn btn-success pull-right">Answer Question</div>', 'question-queue/open-question/'.$nid, array('html' => true));
         break;
     case 'complete':
         $lfz_output = "";
