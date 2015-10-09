@@ -219,6 +219,14 @@ function lfz_menu()
         'type' => MENU_CALLBACK,
     );
 
+    $items['instructor-time'] = array(
+        'title' => 'Instructor Time',
+        'page callback' => 'instructor_time',
+        'access arguments' => array('instructor time'),
+        'expanded' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
 
     return $items;
 }
@@ -286,6 +294,10 @@ function lfz_permission()
         'answer user queue' => array(
             'title' => t('Answer Student Queue'),
             'description' => t('User with this permission can answer other user questions'),
+        ),
+        'instructor time' => array(
+            'title' => t('Book Instructor Time'),
+            'description' => t('User with this permission can book time with an instructor'),
         ),
     );
 }
