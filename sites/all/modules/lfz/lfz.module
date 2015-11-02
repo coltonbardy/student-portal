@@ -2,6 +2,14 @@
 
 function lfz_menu()
 {
+    $items['lfz/update'] = array(
+        'title' => 'LFZ Update',
+        'page callback' => 'lfz_update_callback',
+        'access arguments' => array('lfz admin update'),
+        'expanded' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
     $items['class/%/today'] = array(
         'title' => 'Todays Agenda',
         'page callback' => 'todays_agenda_callback',
@@ -179,7 +187,7 @@ function lfz_menu()
     $items['skillassessment/overview/class/%'] = array(
         'title' => 'Skill Assessment Overview Per Class',
         'page callback' => 'skill_assessment_overview_callback',
-        'callback arguments' => array(3),
+        'page arguments' => array(3),
         'page arguments' => array('manage skill assessments'),
         'expanded' => TRUE,
         'type' => MENU_CALLBACK,
@@ -189,6 +197,41 @@ function lfz_menu()
         'title' => 'Hipchat question API',
         'page callback' => 'hipchat_api_question',
         'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
+    $items['question-queue/open-question/%'] = array(
+        'title' => 'Question Queue Answer now',
+        'page callback' => 'question_queue_open_question',
+        'page arguments' => array(2),
+        'access arguments' => array('answer user queue'),
+        'expanded' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
+    $items['question-queue/resolve/%'] = array(
+        'title' => 'Question Queue Resolve',
+        'page callback' => 'question_queue_resolve',
+        'page arguments' => array(2),
+        'access arguments' => array('view my queue'),
+        'expanded' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
+    $items['question-queue/instructor/resolve/%'] = array(
+        'title' => 'Question Queue Instructor Resolve',
+        'page callback' => 'question_queue_instructor_resolve',
+        'page arguments' => array(3),
+        'access arguments' => array('view my queue'),
+        'expanded' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
+    $items['instructor-time'] = array(
+        'title' => 'Instructor Time',
+        'page callback' => 'instructor_time',
+        'access arguments' => array('instructor time'),
+        'expanded' => TRUE,
         'type' => MENU_CALLBACK,
     );
 
@@ -247,6 +290,26 @@ function lfz_permission()
         'manage skill assessments' => array(
             'title' => t('Manage Skill Assessments'),
             'description' => t('Manage Skill assessments and skill assessment results'),
+        ),
+        'view user queue all' => array(
+            'title' => t('View User Queue All'),
+            'description' => t('User with this permission can view all questions in the queue'),
+        ),
+        'view my queue' => array(
+            'title' => t('View My Queue'),
+            'description' => t('User with this permission can view questions that they have asked through hipchat connection into the portal through hipchat webhooks'),
+        ),
+        'answer user queue' => array(
+            'title' => t('Answer Student Queue'),
+            'description' => t('User with this permission can answer other user questions'),
+        ),
+        'instructor time' => array(
+            'title' => t('Book Instructor Time'),
+            'description' => t('User with this permission can book time with an instructor'),
+        ),
+        'lfz admin update' => array(
+            'title' => t('LearningFuze Admin Update'),
+            'description' => t('User with this permission run the update script after a update performed by an admin'),
         ),
     );
 }
@@ -520,7 +583,7 @@ function get_agenda_items_by_agenda($agenda_node)
             foreach ($agenda_node->field_agenda_item['und'] as $item) {
                 $nid = $agenda_node->field_agenda_item['und'];
                 $node_item = node_load($item['nid']);
-                if ($node_item) {
+                if ($node_item && $node_item->status) {
                     $r[] = $node_item;
                 }
             }
@@ -1124,4 +1187,63 @@ function _get_user_get_basic_info($uid = false)
     }
 
     return $r;
+}
+
+function _user_get_name($user=false){
+
+    if(!$user){
+        global $user;
+    }
+    $user_details = array();
+
+    if(is_object($user)){
+        $user_details = user_load($user->uid);
+    }else if(is_string($user) || is_int($user)){
+        $user_details = user_load($user);
+    }
+
+    $first_name = (isset($user_details->field_first_name['und'][0]['safe_value']))?$user_details->field_first_name['und'][0]['safe_value']:"";
+    $last_name = (isset($user_details->field_last_name['und'][0]['safe_value']))?$user_details->field_last_name['und'][0]['safe_value']:"";
+
+    return trim($first_name." ".$last_name);
+}
+
+function is_valid_url($url){
+    if (preg_match("/\b(?:(?:https?|ftp):\/\/|www\.)[-a-z0-9+&@#\/%?=~_|!:,.;]*[-a-z0-9+&@#\/%=~_|]/i", $url)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+function string_to_google_search_link($string){
+
+    $google_search_string = str_replace(" ", "+", $string);
+    $google_search_string = str_replace("?", "", $google_search_string);
+
+    $base_link = "http://www.google.com/search?q=".$google_search_string;
+
+    return $base_link;
+}
+
+/**
+ * Save's changes to a drupal node and returns a value of whether or not the node was saved successfully
+ *
+ * @param $node
+ * @return bool
+ * @throws Exception
+ */
+function lfz_node_save($node){
+
+    node_save($node);
+
+    $diff = time()-$node->changed;
+
+    //check if the node has changed in the last 5 seconds
+    if($diff > 5){
+        return false;
+    }
+
+    return true;
 }
