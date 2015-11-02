@@ -144,7 +144,7 @@ function hipchat_api_question()
     if (!$message_body
         && $is_test
     ) {
-        $message_body = '{"event": "room_message", "item": {"message": {"date": "2015-09-23T03:12:08.182564+00:00", "from": {"id": 1848205, "links": {"self": "https://api.hipchat.com/v2/user/1848205"}, "mention_name": "EricJohnson", "name": "Eric Johnson", "version": "00000000"}, "id": "70e43903-9a77-4409-ad31-b12724fdf4d9", "mentions": [], "message": "/q question this is a test? prototype details are inserted here", "type": "message"}, "room": {"id": 1299248, "links": {"members": "https://api.hipchat.com/v2/room/1299248/member", "participants": "https://api.hipchat.com/v2/room/1299248/participant", "self": "https://api.hipchat.com/v2/room/1299248", "webhooks": "https://api.hipchat.com/v2/room/1299248/webhook"}, "name": "Teaching", "version": "6THUMLP6"}}, "oauth_client_id": "3bf98ff9-b847-4ea0-9413-20959a08230d", "webhook_id": 2632464}';
+        $message_body = '{"event": "room_message", "item": {"message": {"date": "2015-09-23T03:12:08.182564+00:00", "from": {"id": 1848205, "links": {"self": "https://api.hipchat.com/v2/user/1848205"}, "mention_name": "EricJohnson", "name": "Eric Johnson", "version": "00000000"}, "id": "70e43903-9a77-4409-ad31-b12724fdf4d9", "mentions": [], "message": "/q I\'ve been seeing quite a bit in regards to using color palets, now included in the link provided by mr paschal, do we just make our own little library of color palets, or we just look them up on google and paste them into our style sheet and comment them out just as a reference library of colors to use?", "type": "message"}, "room": {"id": 1299248, "links": {"members": "https://api.hipchat.com/v2/room/1299248/member", "participants": "https://api.hipchat.com/v2/room/1299248/participant", "self": "https://api.hipchat.com/v2/room/1299248", "webhooks": "https://api.hipchat.com/v2/room/1299248/webhook"}, "name": "Teaching", "version": "6THUMLP6"}}, "oauth_client_id": "3bf98ff9-b847-4ea0-9413-20959a08230d", "webhook_id": 2632464}';
     }
 
 
@@ -287,7 +287,7 @@ function hipchat_api_question()
 
     $r = array(
         "color" => "green",
-        "message" => "<p>Thanks for submitting your question to the queue. An instructor will contact you shortly. While your waiting, here are a couple links that may help you.</p><ul><li>Track your questions : " . l("Portal Help Queue", "http://portal.learningfuze.com/my-queue") . "</li><li>Have you tried Google? : " . l("Click here for direct google search link", $google_search_link) . "</li></ul>",
+        "message" => "<p>Thanks for submitting your question to the queue. An instructor will contact you shortly. While you're waiting, here are a couple links that may help you.</p><ul><li>Track your questions : " . l("Portal Help Queue", "http://portal.learningfuze.com/my-queue") . "</li><li>Have you tried Google? : " . l("Click here for direct google search link", $google_search_link) . "</li></ul>",
         "notify" => false,
         "message_format" => "html"
     );
@@ -835,4 +835,34 @@ function skill_assessment_overview_callback($class_nid = false)
     $r = theme('skill_assessment_topic_issues_list', array('data' => $template_data));
 
     return $r;
+}
+
+header("Access-Control-Allow-Origin: http://www.nfl.com");
+
+
+function lfz_update_callback(){
+
+    //select all user queue items and update to public
+    $sql = "SELECT node.nid AS nid FROM {node} node WHERE type='user_queue_item'";
+
+    $result = db_query($sql, array(':type'=>"user_queue_item"));
+
+    $data = $result->fetchAll();
+
+    foreach($data as $obj){
+        $node = node_load($obj->nid);
+
+        $node->field_public = array(
+            "und"=>array(
+                array(
+                    "value"=>1
+                )
+            )
+        );
+
+        lfz_node_save($node);
+    }
+
+
+
 }

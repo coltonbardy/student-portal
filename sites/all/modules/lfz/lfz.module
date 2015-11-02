@@ -2,6 +2,14 @@
 
 function lfz_menu()
 {
+    $items['lfz/update'] = array(
+        'title' => 'LFZ Update',
+        'page callback' => 'lfz_update_callback',
+        'access arguments' => array('lfz admin update'),
+        'expanded' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
     $items['class/%/today'] = array(
         'title' => 'Todays Agenda',
         'page callback' => 'todays_agenda_callback',
@@ -299,6 +307,10 @@ function lfz_permission()
             'title' => t('Book Instructor Time'),
             'description' => t('User with this permission can book time with an instructor'),
         ),
+        'lfz admin update' => array(
+            'title' => t('LearningFuze Admin Update'),
+            'description' => t('User with this permission run the update script after a update performed by an admin'),
+        ),
     );
 }
 
@@ -571,7 +583,7 @@ function get_agenda_items_by_agenda($agenda_node)
             foreach ($agenda_node->field_agenda_item['und'] as $item) {
                 $nid = $agenda_node->field_agenda_item['und'];
                 $node_item = node_load($item['nid']);
-                if ($node_item) {
+                if ($node_item && $node_item->status) {
                     $r[] = $node_item;
                 }
             }

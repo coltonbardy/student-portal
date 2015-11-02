@@ -36,7 +36,7 @@
                 		addAgendaItem(response['content']);
                 		$('#search-results').html('');
                 	}else{
-                		var noDataContent = $('<h4>').html("No Agenda Items for today");
+                		var noDataContent = $('<h4>').html("Agenda Items Coming soon");
                 		$('#todays_agenda').html(noDataContent);
                 	}
                 }
