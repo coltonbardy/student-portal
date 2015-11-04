@@ -869,6 +869,10 @@ function lfz_update_callback(){
 
 function ajax_info_page_mail_callback(){
 
+    header('Access-Control-Allow-Origin: http://*.github.io/');  //I have also tried the * wildcard and get the same response
+    header("Access-Control-Allow-Credentials: true");
+    header('Access-Control-Allow-Methods: GET, POST');
+
     //load admin user for language preferences
     //@TODO probably need to adjust this in the future
     $user = user_load(1);
@@ -882,7 +886,7 @@ function ajax_info_page_mail_callback(){
     $r = array("success"=>true,"message"=>"Thank you for submitting your information, a Counselor will be in touch shortly");
     $email_params = array(
         "subject"=>"Info Page form Submitted",
-        "body"=>"Data sent to the Portal was malformed"
+        "body"=>"Data sent to the Portal was malformed at ".date("m/d/Y H:i:s", time())
     );
 
     //@TODO create email template
@@ -899,7 +903,7 @@ function ajax_info_page_mail_callback(){
 
     }else{
         $r['success'] = false;
-        $r['message'] = "We were unable to process your information, a email has been sent to support@learningfuze.com. If you need further assistance please reach out to ";
+        $r['message'] = "We were unable to process your information, a email has been sent to support@learningfuze.com. If you need further assistance please reach out to support.";
     }
 
     //attempt sending the email
@@ -911,5 +915,13 @@ function ajax_info_page_mail_callback(){
         $r['messsage'] = "Error sending mail, please contact support@learningfuze.com to resolve this issue";
     }
 
-    return $r;
+    //keep track of successful requests attempts
+    if($r['success']){
+        $count = variable_get("info_page_request_count", 0);
+        variable_set("info_page_request_count", $count+1);
+    }
+
+    //@TODO information for a user should probably be inserted into a node type
+
+    drupal_json_output($r);
 }
