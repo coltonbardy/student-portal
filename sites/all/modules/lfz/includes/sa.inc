@@ -252,9 +252,11 @@ function _parse_user_responses($data, &$errors)
 
                 $options = array(
                     'type' => $q['question_type'],
-                    'unknown_answer_val' => (isset($meta_data['unknown_answer_val']))?$meta_data['unknown_answer_val']:"I don't know"
-                );
+                    'unknown_answer_val' => (isset($meta_data['unknown_answer_val'])) ? $meta_data['unknown_answer_val'] : "I don't know",
+                    'answer_seperator' => (isset($meta_data['answer_seperator'])) ? $meta_data['answer_seperator'] : ","
+            );
                 $temp_response['details'] = _evaluate_user_response($q['answer'], $response[$q['question']], $options);
+
                 $temp_response['answer'] = $q['answer'];
                 $temp_response['topic'] = $q['associated_topic'];
                 $temp_response['skill'] = $q['associated_skill'];
@@ -320,10 +322,11 @@ function _parse_user_responses($data, &$errors)
  * @param $value
  * @return bool
  */
-function _in_array_by_key_value($arr, $key, $value){
+function _in_array_by_key_value($arr, $key, $value)
+{
     $r = false;
-    foreach($arr as $a){
-        if($a[$key] == $value){
+    foreach ($arr as $a) {
+        if ($a[$key] == $value) {
             $r = true;
             break;
         }
@@ -358,6 +361,7 @@ function _evaluate_user_response($answer, $response, $options = array())
         )
     );
 
+    $answer_seperator = (isset($options['answer_seperator'])) ? trim($options['answer_seperator']) : ",";
     $unknown_answer = (isset($options['unknown_answer_val'])) ? trim(strtolower($options['unknown_answer_val'])) : false;
     $answer = trim(strtolower($answer));
     $response = trim(strtolower($response));
@@ -388,13 +392,14 @@ function _evaluate_user_response($answer, $response, $options = array())
             }
             break;
         case 'ms':
-            $answer_arr = explode(",", $answer);
+            $answer_arr = explode($answer_seperator, $answer);
 
             //remove white space from multiple selects
             foreach ($answer_arr as $key => $answer) {
                 $answer_arr[$key] = trim($answer);
             }
-            $response_arr = explode(",", $response);
+
+            $response_arr = explode($answer_seperator, $response);
 
             $r['total_possible'] = count($answer_arr);
 
@@ -403,13 +408,12 @@ function _evaluate_user_response($answer, $response, $options = array())
                     "type" => ANSWER_TYPE_MORE,
                     "response" => $response
                 );
-            }else if(count($answer_arr) < count($response_arr)){
+            } else if (count($answer_arr) < count($response_arr)) {
                 $r['incorrect_details'][] = array(
                     "type" => ANSWER_TYPE_MORE_RESPONSES,
                     "response" => $response
                 );
             }
-
 
             foreach ($response_arr as $response) {
 
@@ -442,7 +446,7 @@ function _evaluate_user_response($answer, $response, $options = array())
     return $r;
 }
 
-function _get_assessment_data($class_nid=false,$assessment_nid = false)
+function _get_assessment_data($class_nid = false, $assessment_nid = false)
 {
 
     global $user;
@@ -456,20 +460,20 @@ function _get_assessment_data($class_nid=false,$assessment_nid = false)
         $sql = "";
         //get all assessment results for instructors
         if (user_access("manage skill assessments")) {
-            if($class_nid){
+            if ($class_nid) {
                 $sql = "SELECT nid, title, changed FROM {node}
                         LEFT JOIN {field_data_field_class_reference} field_data_field_class_reference ON node.nid = field_data_field_class_reference.entity_id AND (field_data_field_class_reference.entity_type = 'node' AND field_data_field_class_reference.deleted = '0')
                         WHERE type=:type
                             AND (field_data_field_class_reference.field_class_reference_nid IN  (:class_nid))
                         ORDER BY changed DESC";
                 $values[":class_nid"] = array($class_nid);
-            }else{
+            } else {
                 $sql = 'SELECT nid, title, changed FROM {node} WHERE type=:type ORDER BY changed DESC';
             }
         } else if (user_has_role(array_search('student', user_roles()))) {
             //get results for specific students roles
 
-            if($class_nid){
+            if ($class_nid) {
                 $sql = "SELECT node.title AS title, node.nid AS nid, node.changed AS changed, 'node' AS field_data_field_class_reference_node_entity_type
                     FROM
                     {node} node
@@ -482,7 +486,7 @@ function _get_assessment_data($class_nid=false,$assessment_nid = false)
                       AND (field_data_field_class_reference.field_class_reference_nid IN  (:class_nid))
                     ORDER BY node.changed ASC";
                 $values[":class_nid"] = array($class_nid);
-            }else {
+            } else {
                 $sql = "SELECT node.title AS title, node.nid AS nid, node.changed AS changed, 'node' AS field_data_field_class_reference_node_entity_type
                     FROM
                     {node} node
@@ -589,9 +593,9 @@ function _get_overview_issue_topic_data_by_question($data)
 
         foreach ($users as $user) {
 
-            foreach($user['questions'] as $question_data){
+            foreach ($user['questions'] as $question_data) {
 
-                if(trim($question_data['topic']) == ""){
+                if (trim($question_data['topic']) == "") {
                     continue;
                 }
 
@@ -599,36 +603,36 @@ function _get_overview_issue_topic_data_by_question($data)
                 $answer_clean = htmlentities($question_data['answer']);
                 $response_clean = htmlentities($question_data['response']);
 
-                if(!isset($issue_topic_data_by_question[$question_data['topic']])){
+                if (!isset($issue_topic_data_by_question[$question_data['topic']])) {
                     $issue_topic_data_by_question[$question_data['topic']] = array(
-                        'total_questions'=>0,
-                        'total_correct'=>0,
-                        'questions'=>array()
+                        'total_questions' => 0,
+                        'total_correct' => 0,
+                        'questions' => array()
                     );
                 }
 
                 $issue_topic_data_by_question[$question_data['topic']]['total_questions'] += 1;
-                if($question_data['correct']){
+                if ($question_data['correct']) {
                     $issue_topic_data_by_question[$question_data['topic']]['total_correct'] += 1;
                 }
 
-                $issue_topic_data_by_question[$question_data['topic']]['percent'] = round($issue_topic_data_by_question[$question_data['topic']]['total_correct']/$issue_topic_data_by_question[$question_data['topic']]['total_questions']*100);
+                $issue_topic_data_by_question[$question_data['topic']]['percent'] = round($issue_topic_data_by_question[$question_data['topic']]['total_correct'] / $issue_topic_data_by_question[$question_data['topic']]['total_questions'] * 100);
 
-                $question_key = $d['nid'].$question_clean;
+                $question_key = $d['nid'] . $question_clean;
 
-                if(!isset($issue_topic_data_by_question[$question_data['topic']]['questions'][$question_key])){
+                if (!isset($issue_topic_data_by_question[$question_data['topic']]['questions'][$question_key])) {
                     $issue_topic_data_by_question[$question_data['topic']]['questions'][$question_key] = array(
-                        'sa_link'=>_get_sa_link_by_result_nid($d['nid']),
-                        'question'=>$question_clean,
-                        'answer'=>$answer_clean,
-                        'user_responses'=>array()
+                        'sa_link' => _get_sa_link_by_result_nid($d['nid']),
+                        'question' => $question_clean,
+                        'answer' => $answer_clean,
+                        'user_responses' => array()
                     );
                 }
 
-                if(!$question_data['correct']){
+                if (!$question_data['correct']) {
                     $issue_topic_data_by_question[$question_data['topic']]['questions'][$question_key]['user_responses'][$user['uid']] = array(
-                        'user_info'=>_get_user_get_basic_info($user['uid']),
-                        'response'=>$response_clean
+                        'user_info' => _get_user_get_basic_info($user['uid']),
+                        'response' => $response_clean
                     );
                 }
 
@@ -650,11 +654,11 @@ function sort_user_data_by_topic_correct_percentage($a, $b)
     $b_total_questions = $b['total_questions'];
 
     if ($a['percent'] == $b['percent']) {
-        if($a_total_questions < $b_total_questions){
+        if ($a_total_questions < $b_total_questions) {
             return 1;
-        }else if($a_total_questions > $b_total_questions){
+        } else if ($a_total_questions > $b_total_questions) {
             return -1;
-        }else{
+        } else {
             return 0;
         }
     }
@@ -683,36 +687,36 @@ function _get_overview_issue_topic_data_by_user($data)
                 );
             }
 
-            foreach($user['questions'] as $question){
+            foreach ($user['questions'] as $question) {
 
                 //check if this topic has been created for the current user
                 // if not then create the data structure
-                if(!isset($issue_topic_data_by_user[$uid]['topics'][$question['topic']])){
+                if (!isset($issue_topic_data_by_user[$uid]['topics'][$question['topic']])) {
                     $issue_topic_data_by_user[$uid]['topics'][$question['topic']] = array(
-                        'title'=>$question['topic'],
-                        'total_questions'=>0,
-                        'total_correct'=>0,
-                        'skill_assessments'=>array()
+                        'title' => $question['topic'],
+                        'total_questions' => 0,
+                        'total_correct' => 0,
+                        'skill_assessments' => array()
                     );
                 }
 
-                if(!isset($issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']])){
+                if (!isset($issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']])) {
                     $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']] = array(
-                        'nid'=>$d['nid'],
-                        'total_questions'=>0,
-                        'total_correct'=>0,
-                        'questions'=>array()
+                        'nid' => $d['nid'],
+                        'total_questions' => 0,
+                        'total_correct' => 0,
+                        'questions' => array()
                     );
                 }
 
                 $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_questions'] += 1;
                 $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['total_questions'] += 1;
-                if($question['correct']){
+                if ($question['correct']) {
                     $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_correct'] += 1;
                     $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['total_correct'] += 1;
                 }
 
-                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['percent'] = round($issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_correct']/$issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_questions']*100);
+                $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['percent'] = round($issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_correct'] / $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['total_questions'] * 100);
 
                 $issue_topic_data_by_user[$uid]['topics'][$question['topic']]['skill_assessments'][$d['nid']]['questions'][] = $question;
 
