@@ -866,3 +866,50 @@ function lfz_update_callback(){
 
 
 }
+
+function ajax_info_page_mail_callback(){
+
+    //load admin user for language preferences
+    //@TODO probably need to adjust this in the future
+    $user = user_load(1);
+
+    date_default_timezone_set('America/Los_Angeles');
+
+    $data = (isset($_REQUEST) && !empty($_REQUEST))?$_REQUEST:false;
+
+    $email_body = "";
+    $to_email = "eric.johnson@learningfuze.com";
+    $r = array("success"=>true,"message"=>"Thank you for submitting your information, a Counselor will be in touch shortly");
+    $email_params = array(
+        "subject"=>"Info Page form Submitted",
+        "body"=>"Data sent to the Portal was malformed"
+    );
+
+    //@TODO create email template
+    if($data){
+        $email_body = "<h3>Info Page Form Submitted at ".date("m/d/Y H:i:s", time())."</h3>";
+        foreach($data as $key=>$val){
+            $email_body .= "<p><b>".$key.": </b>".$val."</p>";
+        }
+
+        $email_body .= "<p>Portal Email System</p>";
+
+        $email_params['body'] = $email_body;
+
+
+    }else{
+        $r['success'] = false;
+        $r['message'] = "We were unable to process your information, a email has been sent to support@learningfuze.com. If you need further assistance please reach out to ";
+    }
+
+    //attempt sending the email
+    $message = drupal_mail("lfz","info_page",$to_email,user_preferred_language($user), $email_params);
+
+    //check the rsult of the drupal system
+    if(!isset($message['result']) || !$message['result']){
+        $r['success'] = false;
+        $r['messsage'] = "Error sending mail, please contact support@learningfuze.com to resolve this issue";
+    }
+
+    return $r;
+}
