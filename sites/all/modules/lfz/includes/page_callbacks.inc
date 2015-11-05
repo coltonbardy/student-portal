@@ -863,14 +863,11 @@ function lfz_update_callback(){
         lfz_node_save($node);
     }
 
-
-
 }
 
 function ajax_info_page_mail_callback(){
 
-    header('Access-Control-Allow-Origin: http://*.github.io/');  //I have also tried the * wildcard and get the same response
-    header("Access-Control-Allow-Credentials: true");
+    header('Access-Control-Allow-Origin: *');  //I have also tried the * wildcard and get the same response
     header('Access-Control-Allow-Methods: GET, POST');
 
     //load admin user for language preferences
@@ -885,13 +882,13 @@ function ajax_info_page_mail_callback(){
     $to_email = "eric.johnson@learningfuze.com";
     $r = array("success"=>true,"message"=>"Thank you for submitting your information, a Counselor will be in touch shortly");
     $email_params = array(
-        "subject"=>"Info Page form Submitted",
+        "subject"=>"Info Session Form Submitted",
         "body"=>"Data sent to the Portal was malformed at ".date("m/d/Y H:i:s", time())
     );
 
     //@TODO create email template
     if($data){
-        $email_body = "<h3>Info Page Form Submitted at ".date("m/d/Y H:i:s", time())."</h3>";
+        $email_body = "<h3>Info Session Form Submitted at ".date("m/d/Y H:i:s", time())."</h3>";
         foreach($data as $key=>$val){
             $email_body .= "<p><b>".$key.": </b>".$val."</p>";
         }
@@ -907,7 +904,7 @@ function ajax_info_page_mail_callback(){
     }
 
     //attempt sending the email
-    $message = drupal_mail("lfz","info_page",$to_email,user_preferred_language($user), $email_params);
+    $message = drupal_mail("lfz","info_session",$to_email,user_preferred_language($user), $email_params);
 
     //check the rsult of the drupal system
     if(!isset($message['result']) || !$message['result']){
