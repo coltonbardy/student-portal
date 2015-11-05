@@ -879,7 +879,7 @@ function ajax_info_page_mail_callback(){
     $data = (isset($_REQUEST) && !empty($_REQUEST))?$_REQUEST:false;
 
     $email_body = "";
-    $to_email = "eric.johnson@learningfuze.com";
+    $to_email = "info@learningfuze.com";
     $r = array("success"=>true,"message"=>"Thank you for submitting your information, a Counselor will be in touch shortly");
     $email_params = array(
         "subject"=>"Info Session Form Submitted",
