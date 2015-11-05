@@ -918,6 +918,11 @@ function ajax_info_page_mail_callback(){
         variable_set("info_page_request_count", $count+1);
     }
 
+    //add debug ability
+    if(isset($data['debug']) && $data['debug']){
+        $r['debug'] = $message;
+    }
+
     //@TODO information for a user should probably be inserted into a node type
 
     drupal_json_output($r);
