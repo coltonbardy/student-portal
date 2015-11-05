@@ -909,7 +909,7 @@ function ajax_info_page_mail_callback(){
     //check the rsult of the drupal system
     if(!isset($message['result']) || !$message['result']){
         $r['success'] = false;
-        $r['messsage'] = "Error sending mail, please contact support@learningfuze.com to resolve this issue";
+        $r['message'] = "Error sending mail, please contact support@learningfuze.com to resolve this issue";
     }
 
     //keep track of successful requests attempts
