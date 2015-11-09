@@ -108,7 +108,7 @@ function question_queue_open_question($queue_item_nid)
                 $message_user_name = _user_get_name($node->uid);
                 $question = ($node->field_queue_question && isset($node->field_queue_question['und'][0]['value'])) ? $node->field_queue_question['und'][0]['value'] : "";
 
-                $auto_response_message = '<p>Hi ' . $message_user_name . ', <br/> your question <b>"' . $question. '"</b> that was inserted into the queue has been opened by <span style="color:green">' . $instructor_user_name . "</span>.</p>";
+                $auto_response_message = '<p>Hi ' . $message_user_name . ', <br/> your question <b>"' . $question . '"</b> that was inserted into the queue has been opened by <span style="color:green">' . $instructor_user_name . "</span>.</p>";
                 $auto_response_message .= "<p>" . $instructor_user_name . " will be reaching out to you shortly, <b>there is no need to respond to this message</b></p>";
 
                 if ($hipchat_user_id) {
@@ -840,22 +840,23 @@ function skill_assessment_overview_callback($class_nid = false)
 header("Access-Control-Allow-Origin: http://www.nfl.com");
 
 
-function lfz_update_callback(){
+function lfz_update_callback()
+{
 
     //select all user queue items and update to public
     $sql = "SELECT node.nid AS nid FROM {node} node WHERE type='user_queue_item'";
 
-    $result = db_query($sql, array(':type'=>"user_queue_item"));
+    $result = db_query($sql, array(':type' => "user_queue_item"));
 
     $data = $result->fetchAll();
 
-    foreach($data as $obj){
+    foreach ($data as $obj) {
         $node = node_load($obj->nid);
 
         $node->field_public = array(
-            "und"=>array(
+            "und" => array(
                 array(
-                    "value"=>1
+                    "value" => 1
                 )
             )
         );
@@ -865,7 +866,8 @@ function lfz_update_callback(){
 
 }
 
-function ajax_info_page_mail_callback(){
+function ajax_info_page_mail_callback()
+{
 
     header('Access-Control-Allow-Origin: *');  //I have also tried the * wildcard and get the same response
     header('Access-Control-Allow-Methods: GET, POST');
@@ -876,54 +878,70 @@ function ajax_info_page_mail_callback(){
 
     date_default_timezone_set('America/Los_Angeles');
 
-    $data = (isset($_REQUEST) && !empty($_REQUEST))?$_REQUEST:false;
+    $data = (isset($_REQUEST) && !empty($_REQUEST)) ? $_REQUEST : false;
 
     $email_body = "";
     $to_email = "info@learningfuze.com";
-    $r = array("success"=>true,"message"=>"Thank you for submitting your information, a Counselor will be in touch shortly");
+    $r = array("success" => true, "message" => "Thank you for submitting your information, a Counselor will be in touch shortly");
     $email_params = array(
-        "subject"=>"Info Session Form Submitted",
-        "body"=>"Data sent to the Portal was malformed at ".date("m/d/Y H:i:s", time())
+        "subject" => "Info Session Form Submitted",
+        "body" => "Data sent to the Portal was malformed at " . date("m/d/Y H:i:s", time())
     );
 
     //@TODO create email template
-    if($data){
-        $email_body = "<h3>Info Session Form Submitted at ".date("m/d/Y H:i:s", time())."</h3>";
-        foreach($data as $key=>$val){
-            $email_body .= "<p><b>".$key.": </b>".$val."</p>";
+    if ($data) {
+        $email_body = "<h3>Info Session Form Submitted at " . date("m/d/Y H:i:s", time()) . "</h3>";
+        foreach ($data as $key => $val) {
+            $email_body .= "<p><b>" . $key . ": </b>" . $val . "</p>";
         }
 
         $email_body .= "<p>Portal Email System</p>";
 
         $email_params['body'] = $email_body;
 
-
-    }else{
+    } else {
         $r['success'] = false;
         $r['message'] = "We were unable to process your information, a email has been sent to support@learningfuze.com. If you need further assistance please reach out to support.";
     }
 
     //attempt sending the email
-    $message = drupal_mail("lfz","info_session",$to_email,user_preferred_language($user), $email_params);
+    $message = drupal_mail("lfz", "info_session", $to_email, user_preferred_language($user), $email_params);
 
     //check the rsult of the drupal system
-    if(!isset($message['result']) || !$message['result']){
+    if (!isset($message['result']) || !$message['result']) {
         $r['success'] = false;
         $r['message'] = "Error sending mail, please contact support@learningfuze.com to resolve this issue";
     }
 
     //keep track of successful requests attempts
-    if($r['success']){
+    if ($r['success']) {
         $count = variable_get("info_page_request_count", 0);
-        variable_set("info_page_request_count", $count+1);
+        variable_set("info_page_request_count", $count + 1);
     }
 
     //add debug ability
-    if(isset($data['debug']) && $data['debug']){
+    if (isset($data['debug']) && $data['debug']) {
         $r['debug'] = $message;
     }
 
     //@TODO information for a user should probably be inserted into a node type
+
+    //check for the needed variables
+    if(isset($data['name'])
+        && isset($data['date'])
+        && isset($data['email'])){
+        $confirmation_message = drupal_mail("lfz", "info_session_confirmation", $data['email'].", info@learningfuze.com", user_preferred_language($user), array(
+            "body" => theme("info_session_email_template", array("name" => $data['name'], "date" => $data['date'])),
+            "subject" => "Info-Session RSVP Confirmed!"
+        ));
+
+        if (!isset($confirmation_message['result']) || !$confirmation_message['result']) {
+            watchdog("lfz", "Error sending confirmation email", array(), WATCHDOG_ERROR);
+        }
+    }else{
+        watchdog("lfz", "Data passed from the info session form see to be incorrect. @data", array("@data"=>$data), WATCHDOG_ERROR);
+    }
+
 
     drupal_json_output($r);
 }

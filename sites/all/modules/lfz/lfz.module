@@ -470,6 +470,13 @@ function lfz_theme($existing, $type, $theme, $path)
      * Skill Assessment Overview Templates END
      */
 
+
+    $theme['info_session_email_template'] = array(
+        'path' => drupal_get_path('module', 'lfz') . '/templates',
+        'template' => 'info-session-email-template',
+        'variables' => array("name" => "", "date" => ""),
+    );
+
     return $theme;
 }
 
@@ -1266,7 +1273,8 @@ function lfz_node_save($node)
  * @param $message
  * @param $params
  */
-function lfz_mail($key, &$message, $params) {
+function lfz_mail($key, &$message, $params)
+{
     if (isset($params['subject'])) {
         $message['subject'] = $params['subject'];
     }

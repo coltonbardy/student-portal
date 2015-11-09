@@ -66,6 +66,9 @@
 		});
 
 		$('body').on('mousedown', '.agenda-list-item',function(evt){
+
+			console.log("evt : ", evt);
+
 			if(evt.metaKey ||
 				evt.ctrlKey){
 				var newElm = $(this).clone();
