@@ -240,6 +240,30 @@ function lfz_menu()
         'page callback' => 'instructor_time',
         'access arguments' => array('instructor time'),
         'expanded' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+    );
+
+    $items['mentorship'] = array(
+        'title' => 'Mentorship',
+        'page callback' => 'mentorship_program_callback',
+        'access arguments' => array('view mentorship'),
+        'expanded' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+    );
+
+    $items['mentorship/questionaire'] = array(
+        'title' => 'Questionaire',
+        'page callback' => 'mentorship_questionaire_callback',
+        'access arguments' => array('view mentorship'),
+        'expanded' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
+    $items['mentorship/booking'] = array(
+        'title' => 'Schedule Time',
+        'page callback' => 'mentorship_booking_callback',
+        'access arguments' => array('view mentorship'),
+        'expanded' => TRUE,
         'type' => MENU_CALLBACK,
     );
 
@@ -314,6 +338,11 @@ function lfz_permission()
         'instructor time' => array(
             'title' => t('Book Instructor Time'),
             'description' => t('User with this permission can book time with an instructor'),
+        ),
+
+        'view mentorship' => array(
+            'title' => t('View Mentorship Program'),
+            'description' => t('User with this permission will be able to view the mentorship program page'),
         ),
         'lfz admin update' => array(
             'title' => t('LearningFuze Admin Update'),
@@ -787,8 +816,21 @@ function get_view_data($url, $args = false, $auth = true)
     return json_decode($response, TRUE);
 }
 
-function lfz_agenda_form($form, &$form_state, $agenda_nid, $class_nid)
+function lfz_agenda_form($form, &$form_state, $agenda_nid, $class_nid, $date = false)
 {
+    $t = ($date) ? strtotime($date) : time();
+    $y_t = $t-60*60*24;
+    $t_t = $t+60*60*24;
+    $today = date("Y-m-d", $t);
+    $yesterday = date("Y-m-d", $t - 60 * 60 * 24);
+    $tomorrow = date("Y-m-d", $t + 60 * 60 * 24);
+
+    $form['navigation'] = array(
+        '#type' => 'item',
+        '#markup' => '<div id="navigation" class="">' . l('<span class="glyphicon glyphicon-chevron-left"></span>' . date('l', $y_t) . "'s Agenda", "class/" . $class_nid . "/today/" . $yesterday, array("html" => true)) . " - " . l(date('l', $t_t) . "'s Agenda<span class=\"glyphicon glyphicon-chevron-right\"></span>", "class/" . $class_nid . "/today/" . $tomorrow, array("html" => true)) . ' </div>',
+        '#prefix' => '<div class="col-xs-12">',
+        '#suffix' => '</div>',
+    );
 
     if (user_has_role(array_search('content manager', user_roles()))) {
         $form['search'] = array(

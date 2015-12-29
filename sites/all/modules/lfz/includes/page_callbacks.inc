@@ -651,7 +651,17 @@ function weekly_agenda_callback($class_nid = false, $date = false)
 
     drupal_add_js(drupal_get_path('module', 'lfz') . "/misc/agenda.js");
 
-    return theme('weekly_agenda', array('days' => $week_results));
+    $t = ($date) ? strtotime($date) : time();
+    $y_t = $t-60*60*24*7;
+    $t_t = $t+60*60*24*7;
+    $yesterday = date("Y-m-d", $y_t);
+    $tomorrow = date("Y-m-d", $t_t);
+
+    $last_week_link = l('<span class="glyphicon glyphicon-chevron-left"></span>Last Weeks Agenda', "class/" . $class_nid . "/week/" . $yesterday, array("html" => true));
+    $next_week_link = l('Next Weeks Agenda<span class="glyphicon glyphicon-chevron-right"></span>', "class/" . $class_nid . "/week/" . $tomorrow, array("html" => true));
+
+
+    return theme('weekly_agenda', array('days' => $week_results, 'last_week_link'=>$last_week_link, 'next_week_link'=>$next_week_link));
 }
 
 function todays_agenda_callback($class_nid = false, $date = false)
@@ -701,7 +711,7 @@ function todays_agenda_callback($class_nid = false, $date = false)
 
     //get form that has the search/add feature and other html markup for
     // autocomplete and agenda list
-    $return = drupal_get_form('lfz_agenda_form', $todays_agenda->nid, $class->nid);
+    $return = drupal_get_form('lfz_agenda_form', $todays_agenda->nid, $class->nid, $date);
 
     //include js file
     drupal_add_js(drupal_get_path('module', 'lfz') . "/misc/agenda.js");
@@ -882,7 +892,7 @@ function ajax_info_page_mail_callback()
 
     $email_body = "";
     $to_email = "info@learningfuze.com";
-    $r = array("success" => true, "message" => "Thank you for submitting your information, a Counselor will be in touch shortly");
+    $r = array("success" => true, "message" => "Thank you for submitting your RSVP! Please check your email.");
     $email_params = array(
         "subject" => "Info Session Form Submitted",
         "body" => "Data sent to the Portal was malformed at " . date("m/d/Y H:i:s", time())
@@ -901,7 +911,7 @@ function ajax_info_page_mail_callback()
 
     } else {
         $r['success'] = false;
-        $r['message'] = "We were unable to process your information, a email has been sent to support@learningfuze.com. If you need further assistance please reach out to support.";
+        $r['message'] = "We were unable to process your information, a email has been sent to support@learningfuze.com. If you need further assistance please reach out via email at info@learningfuze.com";
     }
 
     //attempt sending the email
@@ -910,7 +920,7 @@ function ajax_info_page_mail_callback()
     //check the rsult of the drupal system
     if (!isset($message['result']) || !$message['result']) {
         $r['success'] = false;
-        $r['message'] = "Error sending mail, please contact support@learningfuze.com to resolve this issue";
+        $r['message'] = "Error sending mail, please contact support@learningfuze.com to finalize your RSVP.";
     }
 
     //keep track of successful requests attempts
@@ -944,4 +954,22 @@ function ajax_info_page_mail_callback()
 
 
     drupal_json_output($r);
+}
+
+function mentorship_program_callback(){
+    $r = "<p>Welcome to the mentorship landing page. The 6 weeks following the program is crucial for you to hone your skills
+        based on what you want to do with your career. Most developers coming out of the program need guidance towards that
+        path and we have put together some steps to help us help you as best as we can. Please fill out the questionaire before you schedule time with a mentor.</p>";
+    $r .= '<ul class=col-sm-4><li class="list-group-item"><span class="glyphicon glyphicon-th-list">&nbsp;</span>'.l("Questionaire", "mentorship/questionaire").'</li>';
+    $r .= '<li class="list-group-item"><span class="glyphicon glyphicon-calendar">&nbsp;</span>'.l("Schedule Time",'mentorship/booking'). '</li></ul>';
+
+    return $r;
+}
+
+function mentorship_questionaire_callback(){
+    return '<iframe src="https://docs.google.com/a/learningfuze.com/forms/d/1KBW0wj3qFZmoEfIuYU_rM7lMh3lXwjqDlWnCkXQBBlQ/viewform" style="border:none; height:1000px;" class="col-sm-12"><iframe>';
+}
+
+function mentorship_booking_callback(){
+    return '<iframe src="https://lfzmentors.youcanbook.me/" style="border:none; height:1000px;" class="col-sm-12"><iframe>';
 }
