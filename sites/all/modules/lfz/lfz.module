@@ -235,6 +235,22 @@ function lfz_menu()
         'type' => MENU_CALLBACK,
     );
 
+    $items['question-queue/ajax/assign'] = array(
+        'title' => 'Question Queue assign',
+        'page callback' => 'question_queue_assign',
+        'access arguments' => array('assign help queue'),
+        'expanded' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
+    $items['question-queue/ajax/unassign'] = array(
+        'title' => 'Question Queue unassign',
+        'page callback' => 'question_queue_unassign',
+        'access arguments' => array('assign help queue'),
+        'expanded' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+
     $items['instructor-time'] = array(
         'title' => 'Instructor Time',
         'page callback' => 'instructor_time',
@@ -347,6 +363,10 @@ function lfz_permission()
         'lfz admin update' => array(
             'title' => t('LearningFuze Admin Update'),
             'description' => t('User with this permission run the update script after a update performed by an admin'),
+        ),
+        'assign help queue' => array(
+            'title' => t('Assign a user to help queue'),
+            'description' => t('User with this permission can assign themselves to the help queue'),
         ),
     );
 }
@@ -1224,6 +1244,11 @@ function _get_sa_link_by_result_nid($result_nid)
 
 function _get_user_get_basic_info($uid = false)
 {
+    if(!$uid){
+        global $user;
+        $uid = $user->uid;
+    }
+
     $r = array(
         'uid' => $uid,
         'name' => '',

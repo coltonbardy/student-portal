@@ -285,15 +285,58 @@ function hipchat_api_question()
 
     $google_search_link = string_to_google_search_link($question);
 
+    $assigned_uid = variable_get("question_queue_assignee", false);
+    $assigned_user = "An instructor";
+    if ($assigned_uid) {
+        $assigned_user_arr = _get_user_get_basic_info($assigned_uid);
+        $assigned_user = $assigned_user_arr['name'];
+    }
+
+
     $r = array(
         "color" => "green",
-        "message" => "<p>Thanks for submitting your question to the queue. An instructor will contact you shortly. While you're waiting, here are a couple links that may help you.</p><ul><li>Track your questions : " . l("Portal Help Queue", "http://portal.learningfuze.com/my-queue") . "</li><li>Have you tried Google? : " . l("Click here for direct google search link", $google_search_link) . "</li></ul>",
+        "message" => "<p>Thank you for submitting your question to the queue. <br/>". $assigned_user . " will contact you shortly. While you're waiting, here are a couple links that may help you.</p><ul><li>Track your questions : " . l("Portal Help Queue", "http://portal.learningfuze.com/my-queue") . "</li><li>Have you tried Google? : " . l("Click here for direct google search link", $google_search_link) . "</li></ul>",
         "notify" => false,
         "message_format" => "html"
     );
 
 
     drupal_json_output($r);
+}
+
+function question_queue_assign()
+{
+    global $user;
+    $uid = (isset($_REQUEST['uid'])) ? $_REQUEST['uid'] : $user->uid;
+
+    $is_set = variable_set("question_queue_assignee", $uid);
+    $output = array(
+        "data" => NULL,
+        "success" => true
+    );
+
+    drupal_json_output($output);
+}
+
+function question_queue_unassign()
+{
+    global $user;
+    $uid = (isset($_REQUEST['uid'])) ? $_REQUEST['uid'] : $user->uid;
+
+    $assigned_uid = variable_get("question_queue_assignee", false);
+    $output = array(
+        "data" => NULL,
+        "success" => true
+    );
+
+    if($assigned_uid == $uid){
+        variable_set("question_queue_assignee", false);
+    }else{
+        $output['success'] = false;
+    }
+
+
+    drupal_json_output($output);
 }
 
 function ajax_remove_agenda_item_callback()
@@ -652,8 +695,8 @@ function weekly_agenda_callback($class_nid = false, $date = false)
     drupal_add_js(drupal_get_path('module', 'lfz') . "/misc/agenda.js");
 
     $t = ($date) ? strtotime($date) : time();
-    $y_t = $t-60*60*24*7;
-    $t_t = $t+60*60*24*7;
+    $y_t = $t - 60 * 60 * 24 * 7;
+    $t_t = $t + 60 * 60 * 24 * 7;
     $yesterday = date("Y-m-d", $y_t);
     $tomorrow = date("Y-m-d", $t_t);
 
@@ -661,7 +704,7 @@ function weekly_agenda_callback($class_nid = false, $date = false)
     $next_week_link = l('Next Weeks Agenda<span class="glyphicon glyphicon-chevron-right"></span>', "class/" . $class_nid . "/week/" . $tomorrow, array("html" => true));
 
 
-    return theme('weekly_agenda', array('days' => $week_results, 'last_week_link'=>$last_week_link, 'next_week_link'=>$next_week_link));
+    return theme('weekly_agenda', array('days' => $week_results, 'last_week_link' => $last_week_link, 'next_week_link' => $next_week_link));
 }
 
 function todays_agenda_callback($class_nid = false, $date = false)
@@ -937,10 +980,11 @@ function ajax_info_page_mail_callback()
     //@TODO information for a user should probably be inserted into a node type
 
     //check for the needed variables
-    if(isset($data['name'])
+    if (isset($data['name'])
         && isset($data['date'])
-        && isset($data['email'])){
-        $confirmation_message = drupal_mail("lfz", "info_session_confirmation", $data['email'].", info@learningfuze.com", user_preferred_language($user), array(
+        && isset($data['email'])
+    ) {
+        $confirmation_message = drupal_mail("lfz", "info_session_confirmation", $data['email'] . ", info@learningfuze.com", user_preferred_language($user), array(
             "body" => theme("info_session_email_template", array("name" => $data['name'], "date" => $data['date'])),
             "subject" => "Info-Session RSVP Confirmed!"
         ));
@@ -948,28 +992,31 @@ function ajax_info_page_mail_callback()
         if (!isset($confirmation_message['result']) || !$confirmation_message['result']) {
             watchdog("lfz", "Error sending confirmation email", array(), WATCHDOG_ERROR);
         }
-    }else{
-        watchdog("lfz", "Data passed from the info session form see to be incorrect. @data", array("@data"=>$data), WATCHDOG_ERROR);
+    } else {
+        watchdog("lfz", "Data passed from the info session form see to be incorrect. @data", array("@data" => $data), WATCHDOG_ERROR);
     }
 
 
     drupal_json_output($r);
 }
 
-function mentorship_program_callback(){
+function mentorship_program_callback()
+{
     $r = "<p>Welcome to the mentorship landing page. The 6 weeks following the program is crucial for you to hone your skills
         based on what you want to do with your career. Most developers coming out of the program need guidance towards that
         path and we have put together some steps to help us help you as best as we can. Please fill out the questionaire before you schedule time with a mentor.</p>";
-    $r .= '<ul class=col-sm-4><li class="list-group-item"><span class="glyphicon glyphicon-th-list">&nbsp;</span>'.l("Questionaire", "mentorship/questionaire").'</li>';
-    $r .= '<li class="list-group-item"><span class="glyphicon glyphicon-calendar">&nbsp;</span>'.l("Schedule Time",'mentorship/booking'). '</li></ul>';
+    $r .= '<ul class=col-sm-4><li class="list-group-item"><span class="glyphicon glyphicon-th-list">&nbsp;</span>' . l("Questionaire", "mentorship/questionaire") . '</li>';
+    $r .= '<li class="list-group-item"><span class="glyphicon glyphicon-calendar">&nbsp;</span>' . l("Schedule Time", 'mentorship/booking') . '</li></ul>';
 
     return $r;
 }
 
-function mentorship_questionaire_callback(){
+function mentorship_questionaire_callback()
+{
     return '<iframe src="https://docs.google.com/a/learningfuze.com/forms/d/1KBW0wj3qFZmoEfIuYU_rM7lMh3lXwjqDlWnCkXQBBlQ/viewform" style="border:none; height:1000px;" class="col-sm-12"><iframe>';
 }
 
-function mentorship_booking_callback(){
+function mentorship_booking_callback()
+{
     return '<iframe src="https://lfzmentors.youcanbook.me/" style="border:none; height:1000px;" class="col-sm-12"><iframe>';
 }
