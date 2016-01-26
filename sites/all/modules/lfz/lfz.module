@@ -6,6 +6,17 @@ function lfz_menu()
      * Start prototypes API
      */
 
+    $items['api/prototype/user/class/list'] = array(
+        'title' => 'User class list',
+        'page callback' => 'api_prototype_user_class_list',
+        'access callback' => true,
+        'type' => MENU_CALLBACK,
+    );
+
+    /**
+     * End Prototypes API
+     */
+
     $items['ajax/mail/info-page'] = array(
         'title' => 'Ajax Info Page',
         'page callback' => 'ajax_info_page_mail_callback',
