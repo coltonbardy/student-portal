@@ -6,9 +6,17 @@ function lfz_menu()
      * Start prototypes API
      */
 
-    $items['api/prototype/user/class/list'] = array(
+    $items['api/prototype/class/list'] = array(
         'title' => 'User class list',
         'page callback' => 'api_prototype_user_class_list',
+        'access callback' => true,
+        'type' => MENU_CALLBACK,
+    );
+
+    $items['api/prototype/class/%/students'] = array(
+        'title' => 'User class list',
+        'page arguments' => array(3),
+        'page callback' => 'api_prototype_class_students',
         'access callback' => true,
         'type' => MENU_CALLBACK,
     );
@@ -305,6 +313,8 @@ function lfz_menu()
 module_load_include('inc', 'lfz', 'includes/page_callbacks');
 module_load_include('inc', 'lfz', 'includes/sa');
 module_load_include('inc', 'lfz', 'includes/hipchat');
+module_load_include('inc', 'lfz', 'includes/api/api');
+module_load_include('inc', 'lfz', 'includes/api/prototypes');
 
 /**
  * Implements hook_admin_paths_alter().
@@ -542,7 +552,7 @@ function lfz_theme($existing, $type, $theme, $path)
     $theme['question_queue_auto_response'] = array(
         'path' => drupal_get_path('module', 'lfz') . '/templates',
         'template' => 'question-queue-auto-response',
-        'variables' => array("assigned_user" => "", 'google_search_link'=>"", "duty_status"=>-1),
+        'variables' => array("assigned_user" => "", 'google_search_link' => "", "duty_status" => -1),
     );
 
     /*
@@ -589,11 +599,11 @@ function _remove_agenda_item_from_agenda($agenda_nid, $item_nid, $index = false)
             try {
                 node_save($agenda_node);
             } catch (Exception $e) {
-                $r = array(false, "unable to save node, agend_nid : ".$agenda_nid.", item_nid : ", $item_nid);
+                $r = array(false, "unable to save node, agend_nid : " . $agenda_nid . ", item_nid : ", $item_nid);
             }
         }
     } else {
-        $r = array(false, "not enough info to remove an item, ".$agenda_nid.", item_nid : ", $item_nid);
+        $r = array(false, "not enough info to remove an item, " . $agenda_nid . ", item_nid : ", $item_nid);
     }
 
     return $r;
@@ -859,8 +869,8 @@ function get_view_data($url, $args = false, $auth = true)
 function lfz_agenda_form($form, &$form_state, $agenda_nid, $class_nid, $date = false)
 {
     $t = ($date) ? strtotime($date) : time();
-    $y_t = $t-60*60*24;
-    $t_t = $t+60*60*24;
+    $y_t = $t - 60 * 60 * 24;
+    $t_t = $t + 60 * 60 * 24;
     $today = date("Y-m-d", $t);
     $yesterday = date("Y-m-d", $t - 60 * 60 * 24);
     $tomorrow = date("Y-m-d", $t + 60 * 60 * 24);
@@ -1264,7 +1274,7 @@ function _get_sa_link_by_result_nid($result_nid)
 
 function _get_user_get_basic_info($uid = false)
 {
-    if(!$uid){
+    if (!$uid) {
         global $user;
         $uid = $user->uid;
     }
@@ -1371,4 +1381,71 @@ function lfz_mail($key, &$message, $params)
     if (isset($params['headers']) && is_array($params['headers'])) {
         $message['headers'] += $params['headers'];
     }
+}
+
+function _class_get_students($class_nid)
+{
+    $sql = "SELECT node.nid AS nid
+            FROM {node} node
+            LEFT JOIN {field_data_field_class_reference} field_data_field_class_reference ON node.nid = field_data_field_class_reference.entity_id AND (field_data_field_class_reference.entity_type = 'node' AND field_data_field_class_reference.deleted = '0')
+            WHERE (( (node.status = '1') AND (node.type IN  ('students')) AND (field_data_field_class_reference.field_class_reference_nid IN  (:nid)) ))";
+
+    $result = db_query($sql, array(':nid' => array($class_nid)));
+
+    return $result->fetchAssoc();
+}
+
+function _get_student_user($student_nid, $basic = true)
+{
+    $n = node_load($student_nid);
+    $r = false;
+
+    $test = field_get_items('node', $n, 'field_user_student_reference');
+
+    if ($n->nid) {
+
+        $student_user_ref = _get_field_value($n, "field_user_student_reference");
+
+        if($student_user_ref){
+            if ($basic) {
+                //get basic info not the whole user info
+                $r = _get_user_get_basic_info($student_user_ref);
+            } else {
+                $r = user_load($student_user_ref);
+            }
+        }
+    }
+
+    return $r;
+}
+
+function array_search_key($needle_key, $array, $default=false)
+{
+    foreach ($array AS $key => $value) {
+        if ($key === $needle_key) return $value;
+        if (is_array($value)) {
+            if (($result = array_search_key($needle_key, $value)) !== false)
+                return $result;
+        }
+    }
+    return $default;
+}
+
+function _get_field_value($n, $field)
+{
+    $field = field_get_items('node', $n, $field);
+    $r = false;
+
+    if($field){
+        //search for all of these keys to return the value
+        foreach(array("value", "nid", "uid") as $k){
+            $value = array_search_key($k, $field, "default-value");
+            if($value != "default-value"){
+                $r = $value;
+                break;
+            }
+        }
+    }
+
+    return $r;
 }
