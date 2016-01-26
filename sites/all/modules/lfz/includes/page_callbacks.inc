@@ -144,7 +144,7 @@ function hipchat_api_question()
     if (!$message_body
         && $is_test
     ) {
-        $message_body = '{"event": "room_message", "item": {"message": {"date": "2015-09-23T03:12:08.182564+00:00", "from": {"id": 1848205, "links": {"self": "https://api.hipchat.com/v2/user/1848205"}, "mention_name": "EricJohnson", "name": "Eric Johnson", "version": "00000000"}, "id": "70e43903-9a77-4409-ad31-b12724fdf4d9", "mentions": [], "message": "/q I\'ve been seeing quite a bit in regards to using color palets, now included in the link provided by mr paschal, do we just make our own little library of color palets, or we just look them up on google and paste them into our style sheet and comment them out just as a reference library of colors to use?", "type": "message"}, "room": {"id": 1299248, "links": {"members": "https://api.hipchat.com/v2/room/1299248/member", "participants": "https://api.hipchat.com/v2/room/1299248/participant", "self": "https://api.hipchat.com/v2/room/1299248", "webhooks": "https://api.hipchat.com/v2/room/1299248/webhook"}, "name": "Teaching", "version": "6THUMLP6"}}, "oauth_client_id": "3bf98ff9-b847-4ea0-9413-20959a08230d", "webhook_id": 2632464}';
+        $message_body = '{"event": "room_message", "item": {"message": {"date": "2015-09-23T03:12:08.182564+00:00", "from": {"id": 1848205, "links": {"self": "https://api.hipchat.com/v2/user/1848205"}, "mention_name": "EricJohnson", "name": "Eric Johnson", "version": "00000000"}, "id": "70e43903-9a77-4409-ad31-b12724fdf4d9", "mentions": [], "message": "/q help me please?", "type": "message"}, "room": {"id": 1299248, "links": {"members": "https://api.hipchat.com/v2/room/1299248/member", "participants": "https://api.hipchat.com/v2/room/1299248/participant", "self": "https://api.hipchat.com/v2/room/1299248", "webhooks": "https://api.hipchat.com/v2/room/1299248/webhook"}, "name": "Teaching", "version": "6THUMLP6"}}, "oauth_client_id": "3bf98ff9-b847-4ea0-9413-20959a08230d", "webhook_id": 2632464}';
     }
 
 
@@ -168,7 +168,7 @@ function hipchat_api_question()
 
 
     //insert data into watchdog table for debugging
-    watchdog(WATCHDOG_DEBUG, json_encode($data));
+    //watchdog(WATCHDOG_DEBUG, json_encode($data));
 
     //check that the event is a room message,
     // this would allow for multiple tips of web hooks to call the same url
@@ -281,25 +281,59 @@ function hipchat_api_question()
         )
     );
 
+    //create a new queue node from the question
     $new_node = _create_node($user_queue_item);
 
-    $google_search_link = string_to_google_search_link($question);
+    if($new_node){
+        $google_search_link = string_to_google_search_link($question);
 
-    $assigned_uid = variable_get("question_queue_assignee", false);
-    $assigned_user = "An instructor";
-    if ($assigned_uid) {
-        $assigned_user_arr = _get_user_get_basic_info($assigned_uid);
-        $assigned_user = $assigned_user_arr['name'];
+        //check for assigned user
+        $assigned_uid = variable_get("question_queue_assignee", false);
+        $assigned_user = "An instructor"; // default text when there is no assigned user
+        if ($assigned_uid) {
+            $assigned_user_arr = _get_user_get_basic_info($assigned_uid);
+            $assigned_user = $assigned_user_arr['name'];
+        }
+
+        date_default_timezone_set('America/Los_Angeles');
+
+        $h = date("Gi");
+        $day_of_week = date("D");
+        /**
+         * possible statues
+         * -1 = off duty
+         * 0 = on duty before class hours
+         * 1 on duty during class hours
+         * 2 on duty after class hours
+         */
+        $duty_status = 1;
+
+        //check if message is on the weekend
+        if(in_array($day_of_week, array("Sat", "Sun")) == -1){
+            $duty_status = -1;
+        }else{
+            if($h < 1000 && $h > 830){
+                $duty_status = 0;
+            }else if($h > 1800 && $h < 2030){
+                $duty_status = 2;
+            }
+        }
+
+
+        $r = array(
+            "color" => "green",
+            "message" => theme('question_queue_auto_response', array('assigned_user'=>$assigned_user, 'google_search_link'=>$google_search_link, 'duty_status'=>$duty_status)),
+            "notify" => false,
+            "message_format" => "html"
+        );
+    }else{
+        $r = array(
+            "color" => "red",
+            "message" => "There was an issue saving the question to the portal, An instructor will be informed and follow up with your question shortly.",
+            "notify" => false,
+            "message_format" => "html"
+        );
     }
-
-
-    $r = array(
-        "color" => "green",
-        "message" => "<p>Thank you for submitting your question to the queue. <br/>". $assigned_user . " will contact you shortly. While you're waiting, here are a couple links that may help you.</p><ul><li>Track your questions : " . l("Portal Help Queue", "http://portal.learningfuze.com/my-queue") . "</li><li>Have you tried Google? : " . l("Click here for direct google search link", $google_search_link) . "</li></ul>",
-        "notify" => false,
-        "message_format" => "html"
-    );
-
 
     drupal_json_output($r);
 }
@@ -355,11 +389,13 @@ function ajax_remove_agenda_item_callback()
 
     $res = array('success' => true, 'data' => null);
 
-    if (_remove_agenda_item_from_agenda($agenda_node, $item_nid, $index)) {
+    $did_remove = _remove_agenda_item_from_agenda($agenda_node, $item_nid, $index);
+
+    if (!is_array($did_remove) && $did_remove) {
         $res['data'] = $agenda_node;
     } else {
         $res['success'] = false;
-        $res['data'] = 'Error saving node';
+        $res['data'] = $did_remove[1];
     }
 
     drupal_json_output($res);
@@ -411,9 +447,9 @@ function ajax_agenda_item_save()
 
         //check if the item is a clone
         if (!$clone) {
-
+            $did_remove = _remove_agenda_item_from_agenda($remove_from_agenda, $item_nid, $current_index);
             //old agenda remove index to add it back in
-            if (!_remove_agenda_item_from_agenda($remove_from_agenda, $item_nid, $current_index)) {
+            if (is_array($did_remove) && !$did_remove[0]) {
 
                 $res['content'] = 'Unable to remove agenda item:' . $item_nid . ' from agenda:' . $remove_from_agenda->nid;
                 echo json_encode($res);

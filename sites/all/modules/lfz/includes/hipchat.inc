@@ -79,6 +79,7 @@ function hipchat_key_words()
         'hipchat',
         'html',
         'instructor',
+        'jordan',
         'jquery',
         'js',
         'php',
