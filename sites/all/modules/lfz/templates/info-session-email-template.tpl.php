@@ -17,7 +17,7 @@ We are located at:
 9080 Irvine Center Dr., 2nd Floor
 Irvine, CA 92618
 
-Check out our Facebook page at  http://www.facebook.com/learningfuze.com to see a glimpse of what we’ll all about.
+Check out our Facebook page at  http://www.facebook.com/learningfuze to see a glimpse of what we’ll all about.
 
 See you soon,
 

@@ -1392,7 +1392,7 @@ function _class_get_students($class_nid)
 
     $result = db_query($sql, array(':nid' => array($class_nid)));
 
-    return $result->fetchAssoc();
+    return $result->fetchAll();
 }
 
 function _get_student_user($student_nid, $basic = true)

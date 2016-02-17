@@ -926,7 +926,7 @@ function skill_assessment_overview_callback($class_nid = false)
     return $r;
 }
 
-header("Access-Control-Allow-Origin: http://www.nfl.com");
+header("Access-Control-Allow-Origin: http://localhost:3000");
 
 
 function lfz_update_callback()
@@ -1029,7 +1029,7 @@ function ajax_info_page_mail_callback()
             watchdog("lfz", "Error sending confirmation email", array(), WATCHDOG_ERROR);
         }
     } else {
-        watchdog("lfz", "Data passed from the info session form see to be incorrect. @data", array("@data" => $data), WATCHDOG_ERROR);
+        watchdog("lfz", "Data passed from the info session form seems to be incorrect. @data", array("@data" => $data), WATCHDOG_ERROR);
     }
 
 
