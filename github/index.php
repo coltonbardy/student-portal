@@ -59,8 +59,8 @@ $repo_map = array(
             'clone_url' => 'git@github.com:Learning-Fuze/website.git',
             'remote' => 'origin',
         ),
-        'live-test' => array(
-            'dir' => '/opt/sandbox/dev.learningfuze.com/live-test/',
+        'master' => array(
+            'dir' => '/opt/sandbox/learningfuze.com/',
             'clone_url' => 'git@github.com:Learning-Fuze/website.git',
             'remote' => 'origin',
             'hooks'=>array(
@@ -71,7 +71,7 @@ $repo_map = array(
 
                     if($action != 'closed'){
                         return false;
-                    }elseif($base != 'live-test' && $head != 'dev'){
+                    }elseif($base != 'master' || $head != 'dev'){
                         return false;
                     }else{
                         return true;
@@ -114,6 +114,8 @@ if (!isset($payload['pull_request'])) {
 $base_branch = $payload['pull_request']['base']['ref'];
 $git_repo_name = $payload['repository']['name'];
 
+$log->info($git_repo_name);
+
 //check if payload has references in repo map
 if(!isset($repo_map[$git_repo_name]) && !isset($repo_map[$git_repo_name][$base_branch])){
     $log->info("Payload info doesnt match repo map");
@@ -128,30 +130,23 @@ $hooks = (isset($actionObj['hooks']))?$actionObj['hooks']:false;
 //check that request is a pull request
 // check that repo name is an accepted repo to handle
 if ($headers['X-GitHub-Event'] == 'pull_request'
-    && $git_data['action'] === 'closed'
+    && $payload['action'] === 'closed'
     && isset($repo_map[$git_repo_name])
 ) {
 //used for push requests
-//    $git_data_branch = array_pop(explode("/", $git_data['ref']));
 
     if($hooks && isset($hooks['pre'])){
+        $log->info("Hook has been defined");
         if(!$hooks['pre']($payload)){
             $log->info("Error passing pre hook validation");
             exit;
         }
     }
 
-    if (isset($repo_map[$git_repo_name][$base_branch])) {
-        $deploy_config = $repo_map[$git_repo_name][$base_branch];
-        $deploy_config['branch'] = $base_branch;
-        $branch = $base_branch;
-        $dir = $deploy_config['dir'];
-        $clone_url = $deploy_config['clone_url'];
-        $remote = $deploy_config['remote'];
-    } else {
-        $log->info('Pushed branch ' . $base_branch . ' doesnt have a deploy configuration in the repo_map array');
-        exit;
-    }
+    $branch = $base_branch;
+    $dir = $actionObj['dir'];
+    $clone_url = $actionObj['clone_url'];
+    $remote = $actionObj['remote'];
 
     try {
         //change the directory from the repo map
@@ -203,178 +198,178 @@ if ($headers['X-GitHub-Event'] == 'pull_request'
         $log->info($e->getMessage());
     }
 } else {
-    $log->info(sprintf('Either the request wasnt a pull request (%s) or repository (%s) that made this call isnt defined in the repo map', $headers['X-GitHub-Event'], $git_reponame));
+    $log->info(sprintf('Either the request wasnt a pull request (%s) or repository (%s) that made this call isnt defined in the repo map', $headers['X-GitHub-Event'], $git_repo_name));
 }
 
-exit;
-
-class Deploy
-{
-
-    /**
-     * A callback function to call after the deploy has finished.
-     *
-     * @var callback
-     */
-    public $post_deploy;
-
-    /**
-     * The name of the file that will be used for logging deployments. Set to
-     * FALSE to disable logging.
-     *
-     * @var string
-     */
-    private $_log = 'deployments.log';
-
-    /**
-     * The timestamp format used for logging.
-     *
-     * @link    http://www.php.net/manual/en/function.date.php
-     * @var     string
-     */
-    private $_date_format = 'Y-m-d H:i:sP';
-
-    /**
-     * The name of the branch to pull from.
-     *
-     * @var string
-     */
-    private $_branch = 'eric-test';
-
-    /**
-     * The name of the remote to pull from.
-     *
-     * @var string
-     */
-    private $_remote = 'origin';
-
-    /**
-     * The directory where your website and git repository are located, can be
-     * a relative or absolute path
-     *
-     * @var string
-     */
-    private $_directory;
-
-    /**
-     * Sets up defaults.
-     *
-     * @param  string $directory Directory where your website is located
-     * @param  array $data Information about the deployment
-     */
-    public function __construct($directory, $options = array())
-    {
-        // Determine the directory path
-        $this->_directory = realpath($directory) . DIRECTORY_SEPARATOR;
-
-        $available_options = array('log', 'date_format', 'branch', 'remote');
-
-        foreach ($options as $option => $value) {
-            if (in_array($option, $available_options)) {
-                $this->{'_' . $option} = $value;
-            }
-        }
-        $this->_log = getcwd() . '/' . $this->_log;
-        $this->log('Attempting deployment...');
-    }
-
-    /**
-     * Writes a message to the log file.
-     *
-     * @param  string $message The message to write
-     * @param  string $type The type of log message (e.g. INFO, DEBUG, ERROR, etc.)
-     */
-    public function log($message, $type = 'INFO')
-    {
-        if ($this->_log) {
-            // Set the name of the log file
-            $filename = $this->_log;
-
-            if (!file_exists($filename)) {
-                // Create the log file
-                file_put_contents($filename, '');
-
-                // Allow anyone to write to log files
-                chmod($filename, 0666);
-            }
-
-            if (is_writable($filename)) {
-                file_put_contents($filename, date($this->_date_format) . ' --- ' . $type . ': ' . $message . PHP_EOL, FILE_APPEND);
-            } else {
-                echo 'Cant write log to file';
-            }
-
-            // Write the message into the log file
-            // Format: time --- type: message
-
-        }
-    }
-
-    /**
-     * Executes the necessary commands to deploy the website.
-     */
-    public function execute()
-    {
-        try {
-            // Make sure we're in the right directory
-            exec('cd ' . $this->_directory, $output);
-            chdir($this->_directory);
-            $this->log('Changing working directory... ' . implode(' ', $output));
-            $this->log('cd ' . $this->_directory);
-
-            // Discard any changes to tracked files since our last deploy
-            exec('git reset --hard HEAD', $output);
-            $this->log('Reseting repository... ' . implode(' ', $output));
-            $this->log('git reset --hard HEAD');
-
-            // Update the local repository
-            exec('git pull ' . $this->_remote . ' ' . $this->_branch, $output);
-            $this->log('Pulling in changes... ' . implode(' ', $output));
-            $this->log('git pull ' . $this->_remote . ' ' . $this->_branch);
-
-            // Secure the .git directory
-            exec('chmod -R og-rx .git');
-            $this->log('Securing .git directory... ');
-            $this->log('chmod -R og-rx .git');
-
-            if (is_callable($this->post_deploy)) {
-                call_user_func($this->post_deploy, $this->_data);
-            }
-            $this->log('Deployment successful.');
-        } catch (Exception $e) {
-            $this->log($e->getMessage(), 'ERROR');
-        }
-    }
-
-}
-
-$repo_map = array(
-    'website' => '/opt/sandbox/dev.learningfuze.com/',
-);
-
-$git_data = json_decode($_POST['payload'], TRUE);
-
-$git_reponame = $git_data['repository']['name'];
-
-if (isset($repo_map[$git_reponame])) {
-    $deploy = new Deploy($repo_map[$git_reponame]);
-    $deploy->post_deploy = function () use ($deploy) {
-        global $git_data, $git_reponame;
-        echo 'inside post deploy';
-
-        try {
-            ob_start();
-            print_r($git_data['commits']);
-            $body = ob_get_clean();
-            $this->log($body);
-            mail('eric.johnson@learningfuze.com', 'Push from ' . $git_reponame, $body);
-        } catch (Exception $e) {
-            echo '<pre>';
-            print_r($e->getMessage());
-            echo '</pre>';
-        }
-
-    };
-
-    $deploy->execute();
-}
+//exit;
+//
+//class Deploy
+//{
+//
+//    /**
+//     * A callback function to call after the deploy has finished.
+//     *
+//     * @var callback
+//     */
+//    public $post_deploy;
+//
+//    /**
+//     * The name of the file that will be used for logging deployments. Set to
+//     * FALSE to disable logging.
+//     *
+//     * @var string
+//     */
+//    private $_log = 'deployments.log';
+//
+//    /**
+//     * The timestamp format used for logging.
+//     *
+//     * @link    http://www.php.net/manual/en/function.date.php
+//     * @var     string
+//     */
+//    private $_date_format = 'Y-m-d H:i:sP';
+//
+//    /**
+//     * The name of the branch to pull from.
+//     *
+//     * @var string
+//     */
+//    private $_branch = 'eric-test';
+//
+//    /**
+//     * The name of the remote to pull from.
+//     *
+//     * @var string
+//     */
+//    private $_remote = 'origin';
+//
+//    /**
+//     * The directory where your website and git repository are located, can be
+//     * a relative or absolute path
+//     *
+//     * @var string
+//     */
+//    private $_directory;
+//
+//    /**
+//     * Sets up defaults.
+//     *
+//     * @param  string $directory Directory where your website is located
+//     * @param  array $data Information about the deployment
+//     */
+//    public function __construct($directory, $options = array())
+//    {
+//        // Determine the directory path
+//        $this->_directory = realpath($directory) . DIRECTORY_SEPARATOR;
+//
+//        $available_options = array('log', 'date_format', 'branch', 'remote');
+//
+//        foreach ($options as $option => $value) {
+//            if (in_array($option, $available_options)) {
+//                $this->{'_' . $option} = $value;
+//            }
+//        }
+//        $this->_log = getcwd() . '/' . $this->_log;
+//        $this->log('Attempting deployment...');
+//    }
+//
+//    /**
+//     * Writes a message to the log file.
+//     *
+//     * @param  string $message The message to write
+//     * @param  string $type The type of log message (e.g. INFO, DEBUG, ERROR, etc.)
+//     */
+//    public function log($message, $type = 'INFO')
+//    {
+//        if ($this->_log) {
+//            // Set the name of the log file
+//            $filename = $this->_log;
+//
+//            if (!file_exists($filename)) {
+//                // Create the log file
+//                file_put_contents($filename, '');
+//
+//                // Allow anyone to write to log files
+//                chmod($filename, 0666);
+//            }
+//
+//            if (is_writable($filename)) {
+//                file_put_contents($filename, date($this->_date_format) . ' --- ' . $type . ': ' . $message . PHP_EOL, FILE_APPEND);
+//            } else {
+//                echo 'Cant write log to file';
+//            }
+//
+//            // Write the message into the log file
+//            // Format: time --- type: message
+//
+//        }
+//    }
+//
+//    /**
+//     * Executes the necessary commands to deploy the website.
+//     */
+//    public function execute()
+//    {
+//        try {
+//            // Make sure we're in the right directory
+//            exec('cd ' . $this->_directory, $output);
+//            chdir($this->_directory);
+//            $this->log('Changing working directory... ' . implode(' ', $output));
+//            $this->log('cd ' . $this->_directory);
+//
+//            // Discard any changes to tracked files since our last deploy
+//            exec('git reset --hard HEAD', $output);
+//            $this->log('Reseting repository... ' . implode(' ', $output));
+//            $this->log('git reset --hard HEAD');
+//
+//            // Update the local repository
+//            exec('git pull ' . $this->_remote . ' ' . $this->_branch, $output);
+//            $this->log('Pulling in changes... ' . implode(' ', $output));
+//            $this->log('git pull ' . $this->_remote . ' ' . $this->_branch);
+//
+//            // Secure the .git directory
+//            exec('chmod -R og-rx .git');
+//            $this->log('Securing .git directory... ');
+//            $this->log('chmod -R og-rx .git');
+//
+//            if (is_callable($this->post_deploy)) {
+//                call_user_func($this->post_deploy, $this->_data);
+//            }
+//            $this->log('Deployment successful.');
+//        } catch (Exception $e) {
+//            $this->log($e->getMessage(), 'ERROR');
+//        }
+//    }
+//
+//}
+//
+//$repo_map = array(
+//    'website' => '/opt/sandbox/dev.learningfuze.com/',
+//);
+//
+//$git_data = json_decode($_POST['payload'], TRUE);
+//
+//$git_reponame = $git_data['repository']['name'];
+//
+//if (isset($repo_map[$git_reponame])) {
+//    $deploy = new Deploy($repo_map[$git_reponame]);
+//    $deploy->post_deploy = function () use ($deploy) {
+//        global $git_data, $git_reponame;
+//        echo 'inside post deploy';
+//
+//        try {
+//            ob_start();
+//            print_r($git_data['commits']);
+//            $body = ob_get_clean();
+//            $this->log($body);
+//            mail('eric.johnson@learningfuze.com', 'Push from ' . $git_reponame, $body);
+//        } catch (Exception $e) {
+//            echo '<pre>';
+//            print_r($e->getMessage());
+//            echo '</pre>';
+//        }
+//
+//    };
+//
+//    $deploy->execute();
+//}

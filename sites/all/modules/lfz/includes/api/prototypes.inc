@@ -8,6 +8,8 @@
 
 function api_prototype_user_class_list(){
 
+    _check_cross();
+
     //@TODO uid needs to be dynamic in some way with authentication
     $users_classes = _get_users_classes(19);
 
@@ -16,7 +18,7 @@ function api_prototype_user_class_list(){
 
 function api_prototype_class_students($class_nid){
 
-//    $class_nid = 141;
+    _check_cross();
 
     $r = array();
 
