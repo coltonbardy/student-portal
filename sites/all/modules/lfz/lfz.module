@@ -1411,6 +1411,8 @@ function lfz_node_save($node)
  */
 function lfz_mail($key, &$message, $params)
 {
+//    $params = (array) $params;
+
     if (isset($params['subject'])) {
         $message['subject'] = $params['subject'];
     }
@@ -1507,7 +1509,8 @@ function _check_cross()
     }
 
     if (!empty($_REQUEST) &&
-        ($_REQUEST['debug'] === 'true' ||
+        (isset($_REQUEST['debug']) &&
+            $_REQUEST['debug'] === 'true' ||
             $_REQUEST['debug'] === true) &&
         (strpos("http://localhost", $http_origin) !== false ||
             strpos("http://localhost:8888", $http_origin) !== false ||
@@ -1573,31 +1576,34 @@ function _lfz_send_mail($to, $subject, $body, $config = array())
     // remove special characters
     // lowercase
     // replace spaces with underscore
-    $key = str_replace(" ", "_", strtolower(preg_replace('/[^A-Za-z0-9\-]/', '', $subject)));
+    $key = str_replace(" ", "_", strtolower(preg_replace('/[^A-Za-z0-9\- ]/', '', $subject)));
     $from = (isset($config['from'])) ? $config['from'] : 'info@learningfuze.com';
     $sent = true;
     $language = (isset($config['language'])) ? $config['language'] : user_preferred_language(null);
 
-    echo '<pre>';
-    print_r($subject);
-    echo '</pre>';
-
-    $confirmation_message = drupal_mail("lfz",
-        $key . "-Email",
-        $to,
-        $from,
-        $language,
-        array(
-            "body" => $body,
-            "subject" => $subject
-        )
+    drupal_mail("lfz",
+        "test",
+        "eric.johnson@learningfuze.com",
+        "ej2586@gmail.com",
+        $language
     );
 
-    //check for the mail confirmation, if no result then send to logs
-    if (!isset($confirmation_message['result']) || !$confirmation_message['result']) {
-        $sent = false;
-        watchdog("lfz", "Error sending email - @subject", array('@subject' => $subject), WATCHDOG_ERROR);
-    }
+//    $confirmation_message = drupal_mail("lfz",
+//        $key . "-Email",
+//        $to,
+//        $from,
+//        $language,
+//        array(
+//            "body" => $body,
+//            "subject" => $subject
+//        )
+//    );
+
+//    //check for the mail confirmation, if no result then send to logs
+//    if (!isset($confirmation_message['result']) || !$confirmation_message['result']) {
+//        $sent = false;
+//        watchdog("lfz", "Error sending email - @subject", array('@subject' => $subject), WATCHDOG_ERROR);
+//    }
 
     return $sent;
 }

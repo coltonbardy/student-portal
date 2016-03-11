@@ -1012,7 +1012,7 @@ function ajax_info_page_mail_callback()
         && isset($data['date'])
         && isset($data['email'])
     ) {
-        $confirmation_message = drupal_mail("lfz", "info_session_confirmation", $data['email'] . ", info@learningfuze.com", user_preferred_language($user), array(
+        $confirmation_message = drupal_mail("lfz", "info_session_confirmation", $data['email'] . ", info@learningfuze.com", user_preferred_language(null), array(
             "body" => theme("info_session_email_template", array("name" => $data['name'], "date" => $data['date'])),
             "subject" => "Info-Session RSVP Confirmed!"
         ));
@@ -1054,8 +1054,7 @@ function ajax_website_form_handler_callback()
     _check_cross();
 
     $r = array(
-        "success" => false,
-        "error" => 'Post data not avialable'
+        "success" => false
     );
 
     if (!empty($_POST)) {
@@ -1093,6 +1092,8 @@ function ajax_website_form_handler_callback()
             $r['error'] = 'unable to save data';
         }
 
+    }else{
+        $r['error'] = 'Data not avaialbe';
     }
 
     website_form_auto_responders($data, $r['success']);

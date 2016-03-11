@@ -10,7 +10,11 @@ Website Form Auto Responder,
 
 The form (<?php print $form; ?>) form was submitted on the website with the following information:
 
-<?php foreach ($form_data as $key => $value): ?>
+<?php foreach ($form_data as $key => $value):
+    if(!is_string($value)){
+        continue;
+    }
+    ?>
 
     <p><b><?php print $key; ?></b> : <?php print $value; ?></p>
 
