@@ -1,0 +1,20 @@
+Timestamp,What is the value of r?,What is the the evalutation of this comparison (bigNumber === bigNumber2)?,What is the typeof myBrainHurts?,what is the output of the last line of the code above?,Give the result of the following comparison. Worth 10e6 bonus points!,First & Last Name,Email Address
+rowtype:meta_data,first_question_value:What is the value of r?,answer_key_index:8,first_response_row:2,unknown_answer_val:I don't know,unique_student_identifier_key:Email Address,start_time:7/1/2015 12:23:57,
+rowtype:question_type,,,mc,mc,ms,,
+rowtype:associated_skill,,,JS Fundamentals,JS Advanced,HTML,,
+rowtype:associated_topic,,,Js Data Types - Primitives,Js Data Types - Primitives,Js Data Types - Reference Variables,,
+rowtype:incorrect_value_topic_association,,,JS Data Types - Reference Variables,JS Data Types - Reference Variables,JS Data Types - Primitives,,
+rowtype:incorrect_value_impacted_skill,,,Attention to Detail,Attention to Detail,Attention to Detail,,
+4/28/2015 14:25:10,I want to be awesome',FALSE,"""object""",null,FALSE,Evan Lanning,ewlanning@gmail.com
+4/28/2015 14:25:50,I want to be awesome',FALSE,"""object""",99999,FALSE,Mike Kidushim,mkidushim@gmail.com
+4/28/2015 14:28:13,I want to be awesome',FALSE,"""string""",cant stop wont stop,FALSE,Shawn Otomo,kodama78@gmail.com
+4/28/2015 14:28:23,I want to be awesome,FALSE,"""object""",99999,FALSE,Travis Ueki,travis.ueki@gmail.com
+4/28/2015 14:28:27,I want to be awesome',FALSE,"""string""",99999,Compile-time Error,James Collins,jactenors@gmail.com
+4/28/2015 14:29:19,awesome,TRUE,null,"(""letsDoThis"" + '')",FALSE,Keith Corros,kcorros@gmail.com
+4/28/2015 14:30:30,I want to be awesome';,FALSE,"""string""",cant stop wont stop,TRUE,Janet Martin,akamimartin@gmail.com
+4/28/2015 14:31:57,awesome',FALSE,"""string""",null,error,Chelsea Leopold,chelseadeonne@gmail.com
+4/28/2015 14:33:14,:( ,FALSE,"""object""",undefined,FALSE,Jordan  Kimura ,jhealth7@gmail.com
+4/28/2015 14:34:53,I want to be awesome',FALSE,"""object""",cant stop wont stop',FALSE,Parris Sikorski,pm_sikorski@yahoo.com
+4/28/2015 14:37:14,I want to be awesome',FALSE,"""string""",99999,TRUE,Daniel Nguy,dnguy008@gmail.com
+4/28/2015 14:38:13,awesome,FALSE,"""object""",undefined ,FALSE,Jordan Kimura ,jhealth7@gmail.com
+4/28/2015 14:51:40,i want to be awesome',FALSE,"""string""",cant stop wont stop',TRUE,Eric Johnson,eric.johnson@learningfuze.com

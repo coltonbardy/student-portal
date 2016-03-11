@@ -1581,29 +1581,22 @@ function _lfz_send_mail($to, $subject, $body, $config = array())
     $sent = true;
     $language = (isset($config['language'])) ? $config['language'] : user_preferred_language(null);
 
-    drupal_mail("lfz",
-        "test",
-        "eric.johnson@learningfuze.com",
-        "ej2586@gmail.com",
-        $language
+    $confirmation_message = drupal_mail("lfz",
+        $key . "-Email",
+        $to,
+        $language,
+        array(
+            "body" => $body,
+            "subject" => $subject
+        ),
+        $from
     );
 
-//    $confirmation_message = drupal_mail("lfz",
-//        $key . "-Email",
-//        $to,
-//        $from,
-//        $language,
-//        array(
-//            "body" => $body,
-//            "subject" => $subject
-//        )
-//    );
-
-//    //check for the mail confirmation, if no result then send to logs
-//    if (!isset($confirmation_message['result']) || !$confirmation_message['result']) {
-//        $sent = false;
-//        watchdog("lfz", "Error sending email - @subject", array('@subject' => $subject), WATCHDOG_ERROR);
-//    }
+    //check for the mail confirmation, if no result then send to logs
+    if (!isset($confirmation_message['result']) || !$confirmation_message['result']) {
+        $sent = false;
+        watchdog("lfz", "Error sending email - @subject", array('@subject' => $subject), WATCHDOG_ERROR);
+    }
 
     return $sent;
 }
