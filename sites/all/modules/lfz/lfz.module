@@ -573,7 +573,7 @@ function lfz_theme($existing, $type, $theme, $path)
      */
     $theme['info_session_email_template'] = array(
         'path' => drupal_get_path('module', 'lfz') . '/templates/emails',
-        'template' => 'info-session-email-template',
+        'template' => 'website-form-info-session-auto-responder',
         'variables' => array("name" => "", "date" => ""),
     );
 
@@ -592,6 +592,12 @@ function lfz_theme($existing, $type, $theme, $path)
     $theme['wesbite_form_front_end_web_dev_auto_responsder'] = array(
         'path' => drupal_get_path('module', 'lfz') . '/templates/emails',
         'template' => 'website-form-front-end-web-dev-auto-responsder',
+        'variables' => array("name" => ""),
+    );
+
+    $theme['wesbite_form_contact_auto_responsder'] = array(
+        'path' => drupal_get_path('module', 'lfz') . '/templates/emails',
+        'template' => 'wesbite-form-contact-auto-responsder',
         'variables' => array("name" => ""),
     );
 
@@ -1601,20 +1607,23 @@ function _lfz_send_mail($to, $subject, $body, $config = array())
     return $sent;
 }
 
-function website_form_auto_responders($data, $success = true)
+function website_form_auto_responders($form_data_array)
 {
     $to = 'eric.johnson@learningfuze.com';
 
-    if (isset($data['fname']) && isset($data['lname'])) {
-        $name = ucfirst($data['fname']) . ' ' . ucfirst($data['lname']);
+    $form_values = $form_data_array['values'];
+    $form_title = $form_data_array['title'];
+
+    if (isset($form_values['first_name']) && isset($form_values['last_name'])) {
+        $name = ucfirst($form_values['first_name']) . ' ' . ucfirst($form_values['last_name']);
     }
 
-    switch ($data['formId']) {
+    switch ($form_title) {
         case 'enroll-intro-web-dev':
             $internal_email_body = theme('wesbite_form_submission', array(
-                'form' => $data['formId'],
-                'form_data' => $data,
-                'link' => l('Student Portal', url('node/' . $data['node']->nid))
+                'form' => $form_title,
+                'form_data' => $form_values,
+                'link' => l('Student Portal', 'node/' . $form_data_array['node']->nid)
             ));
             $internal_email_sent = _lfz_send_mail(
                 $to,
@@ -1627,15 +1636,15 @@ function website_form_auto_responders($data, $success = true)
             ));
             $internal_email_sent = _lfz_send_mail(
                 $to,
-                'Intro Web Development registration',
+                'LearningFuze - Intro Web Development registration',
                 $internal_email_body
             );
             break;
         case 'enroll-frontend-dev':
             $internal_email_body = theme('wesbite_form_submission', array(
-                'form' => $data['formId'],
-                'form_data' => $data,
-                'link' => l('Student Portal', url('node/' . $data['node']->nid))
+                'form' => $form_title,
+                'form_data' => $form_values,
+                'link' => l('Student Portal', 'node/' . $form_data_array['node']->nid)
             ));
             $internal_email_sent = _lfz_send_mail(
                 $to,
@@ -1648,25 +1657,65 @@ function website_form_auto_responders($data, $success = true)
             ));
             $internal_email_sent = _lfz_send_mail(
                 $to,
-                'Intro Web Development registration',
+                'LearningFuze - Front-End Web Development registration',
                 $internal_email_body
             );
             break;
         case 'newsletter-sign-up':
             $internal_email_body = theme('wesbite_form_submission', array(
-                'form' => $data['formId'],
-                'form_data' => $data,
-                'link' => l('Student Portal', url('node/' . $data['node']->nid))
+                'form' => $form_title,
+                'form_data' => $form_values,
+                'link' => l('Student Portal', 'node/' . $form_data_array['node']->nid)
             ));
             $internal_email_sent = _lfz_send_mail(
                 $to,
-                'Newsletter sign up!',
+                'LearningFuze - Newsletter sign up!',
                 $internal_email_body
             );
 
             break;
+        case 'contact_form':
+            $internal_email_body = theme('wesbite_form_submission', array(
+                'form' => $form_title,
+                'form_data' => $form_values,
+                'link' => l('Student Portal', 'node/' . $form_data_array['node']->nid)
+            ));
+            $internal_email_sent = _lfz_send_mail(
+                $to,
+                'Contact Us Form submission',
+                $internal_email_body
+            );
+
+            $student_email_body = theme('wesbite-form-contact-auto-responsder', array(
+                'name' => $name,
+                'form_value' => $form_values
+            ));
+            $internal_email_sent = _lfz_send_mail(
+                $to,
+                'LearningFuze - Contact Us Form submission',
+                $internal_email_body
+            );
+            break;
     }
 
+}
+
+/**
+ * Parses through all from $_REQUEST data and pulls out key=>value pairs when the key has inserted
+ * @param $data
+ */
+function website_form_inputted_data($data){
+
+    $r = array();
+
+    foreach($data as $key=>$value){
+        if(strpos($key, 'inputted') != false) {
+            $new_key = str_replace("inputted_", "", $key);
+            $r[$new_key] = $value;
+        }
+    }
+
+    return $r;
 }
 
 function website_form_redirect($formId)

@@ -1058,14 +1058,21 @@ function ajax_website_form_handler_callback()
     );
 
     if (!empty($_POST)) {
-        $data = $_POST;
-        $title = (isset($data['formId'])) ? $data['formId'] : 'unknown-title';
-        $success_msg = (isset($data['success_msg'])) ? $data['success_msg'] : "Thank you for submitting your info";
-        $data['http_referer'] = (isset($_SERVER['HTTP_REFERER'])) ? $_SERVER['HTTP_REFERER'] : 'Data not validated';
-        $encoded_data = json_encode($data);
+        $postData = $_POST;
+
+        $form_data_array = array(
+            'title' => '',
+            'values' => website_form_inputted_data($postData),
+            'meta_data' => ''
+        );
+
+        $form_data_array['title'] = (isset($postData['formId'])) ? $postData['formId'] : 'unknown-title';
+        $form_data_array['meta_data']['success_msg'] = (isset($data['success_msg'])) ? $data['success_msg'] : "Thank you for submitting your info";
+        $form_data_array['meta_data']['http_referer'] = (isset($_SERVER['HTTP_REFERER'])) ? $_SERVER['HTTP_REFERER'] : 'Data not validated';
+        $encoded_data = json_encode($form_data_array);
         $form_data_capture = array(
             'type' => 'form_data_capture',
-            'title' => $title,
+            'title' => $form_data_array['title'],
             'body' => array(
                 'und' => array(
                     array(
@@ -1082,23 +1089,24 @@ function ajax_website_form_handler_callback()
         $new_node = _create_node($form_data_capture);
 
         if ($new_node) {
-            $r['success'] = true;
-            $r['data'] = array('success_msg' => $success_msg);
+            $form_data_array['response']['success'] = true;
+            $form_data_array['response']['data'] = array('success_msg' => $form_data_array['meta_data']['success_msg']);
 
-            $r['data']['redirect'] = website_form_redirect($data['formId']);
+            $form_data_array['response']['data']['redirect'] = website_form_redirect($form_data_array['title']);
 
-            $data['node'] = $new_node;
+            $form_data_array['node'] = $new_node;
         } else {
-            $r['error'] = 'unable to save data';
+            $form_data_array['response']['error'] = 'unable to save data';
         }
 
-    }else{
-        $r['error'] = 'Data not avaialbe';
+    } else {
+        $form_data_array['response']['error'] = 'Data not avaialbe';
     }
 
-    website_form_auto_responders($data, $r['success']);
 
-    drupal_json_output($r);
+    website_form_auto_responders($form_data_array);
+
+    drupal_json_output($form_data_array['response']);
     exit;
 }
 
