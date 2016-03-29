@@ -1067,7 +1067,7 @@ function ajax_website_form_handler_callback()
         );
 
         $form_data_array['title'] = (isset($postData['formId'])) ? $postData['formId'] : 'unknown-title';
-        $form_data_array['meta_data']['success_msg'] = (isset($data['success_msg'])) ? $data['success_msg'] : "Thank you for submitting your info";
+        $form_data_array['meta_data']['success_msg'] = (isset($postData['success_msg'])) ? $postData['success_msg'] : "Thank you for submitting your info";
         $form_data_array['meta_data']['http_referer'] = (isset($_SERVER['HTTP_REFERER'])) ? $_SERVER['HTTP_REFERER'] : 'Data not validated';
         $encoded_data = json_encode($form_data_array);
         $form_data_capture = array(
@@ -1100,7 +1100,13 @@ function ajax_website_form_handler_callback()
         }
 
     } else {
-        $form_data_array['response']['error'] = 'Data not avaialbe';
+        $form_data_array['response']['error'] = 'Data not available';
+
+        $internal_email_sent = _lfz_send_mail(
+            'eric.johnson@learningfuze.com',
+            'Unknown form submission',
+            'Data was sent to form submission but wasnt valid ' . sprintf('%s ', print_r($_REQUEST, true))
+        );
     }
 
 

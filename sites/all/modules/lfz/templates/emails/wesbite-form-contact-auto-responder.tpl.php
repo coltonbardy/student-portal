@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>LearningFuze - Front End Web Development Form Response</title>
+    <title>LearningFuze - Contact Form Response</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -183,7 +183,7 @@
                                         <tr>
                                             <td align="center"
                                                 style="font-size: 25px; font-family: Helvetica, Arial, sans-serif; color: #333333; padding-top: 30px;"
-                                                class="padding">LearningFuze Front-End Development
+                                                class="padding">Contact Us
                                             </td>
                                         </tr>
                                         <tr>
@@ -191,18 +191,9 @@
                                                 style="padding: 20px 0 0 0; font-size: 16px; line-height: 25px; font-family: Helvetica, Arial, sans-serif; color: #666666;"
                                                 class="padding">Dear <?php print $name; ?>,
                                                 <br>
-                                                Thank you for your interest in the Front-End Web Development Course! The
-                                                start date for this class will be <?php print $date; ?>. We will be in
-                                                contact shortly to answer any questions that you may have about the
-                                                course and guide you through the next steps of the application process.
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center"
-                                                style="padding: 20px 0 0 0; font-size: 16px; line-height: 25px; font-family: Helvetica, Arial, sans-serif; color: #666666;"
-                                                class="padding">If you haven't already, expedite the process by <a
-                                                    href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=W3UHCD4P4A7JL">paying
-                                                    for the class</a>
+                                                We are pleased that your interest in LearningFuze.  Someone from our
+                                                organization will get back to you as
+                                                soon as possible.
                                             </td>
                                         </tr>
                                     </table>
@@ -219,7 +210,7 @@
                                                     <tr>
                                                         <td align="center" style="border-radius: 3px;"
                                                             bgcolor="#256F9C"><a
-                                                                href="http://learningfuze.com/frontend-development"
+                                                                href="http://learningfuze.com/"
                                                                 target="_blank"
                                                                 style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; border-radius: 3px; padding: 15px 25px; border: 1px solid #256F9C; display: inline-block;"
                                                                 class="mobile-button">Learn More &rarr;</a></td>
@@ -457,6 +448,17 @@
             </tr>
             </table>
             <![endif]-->
+        </td>
+    </tr>
+    <tr>
+        <td align="center" valign="top" width="500">Information you submitted:</td>
+    </tr>
+    <tr>
+        <td align="center" valign="top" width="500">
+            <?php
+            foreach ($form_values as $key => $value): ?>
+                <b><?php print $key; ?></b>: <?php print $value; ?><br>
+            <?php endforeach; ?>
         </td>
     </tr>
 </table>

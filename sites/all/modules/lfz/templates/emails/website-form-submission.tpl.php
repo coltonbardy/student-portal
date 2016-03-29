@@ -10,7 +10,7 @@ Website Form Auto Responder,
 
 The form (<?php print $form; ?>) form was submitted on the website with the following information:
 
-<?php foreach ($form_data as $key => $value):
+<?php foreach ($form_values as $key => $value):
     if(!is_string($value)){
         continue;
     }
@@ -20,4 +20,4 @@ The form (<?php print $form; ?>) form was submitted on the website with the foll
 
 <?php endforeach; ?>
 
-You can take more action by going into the <?php $link; ?>
+You can take more action by going into the <?php print $link; ?>
